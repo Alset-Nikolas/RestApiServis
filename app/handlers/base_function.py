@@ -1,7 +1,7 @@
 '''
     Набор функций, которые применяются в рамках hanlers
 '''
-from enrollment.db.models import NodeTree
+from app import NodeTree
 
 def is_category(node) -> bool:
     '''Является тип узла - категория'''
@@ -19,6 +19,8 @@ def get_info(id_node:str) -> set:
     '''Вернуть ниформацию о узле и его детей'''
     node = NodeTree.query.filter_by(node_id=id_node).first()
     ans = dict()
+    #todo
+    ans["childs"] = node.childs
     ans["type"] = node.type_
     ans["name"] = node.name
     ans["id"] = id_node

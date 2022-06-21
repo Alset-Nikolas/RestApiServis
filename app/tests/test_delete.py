@@ -1,4 +1,5 @@
-from enrollment.tests.base_functions import *
+from base_functions import *
+
 START_TREE = {
   "children": [
     {

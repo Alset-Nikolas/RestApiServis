@@ -3,7 +3,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import logging
-from enrollment.app import NodeTree, db
+from app import NodeTree, db
 
 API_BASEURL = "http://localhost:5000"
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -146,7 +146,7 @@ def clear_bd(logger):
     '''Очистка таблицы NodeTree'''
     for node in NodeTree.query.all():
         db.session.delete(node)
-        db.session.commit()
+    db.session.commit()
     assert len(NodeTree.query.all()) == 0
     logger.info(f'clear_bd: passed')
 

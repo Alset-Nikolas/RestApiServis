@@ -1,5 +1,5 @@
-from yandex_rest_api_server.ServisRestApi.enrollment import db
 
+from app import db
 
 class NodeTree(db.Model):
     node_id = db.Column(db.String(), primary_key=True, nullable=False, unique=True, )

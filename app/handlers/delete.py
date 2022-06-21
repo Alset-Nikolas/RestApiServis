@@ -1,7 +1,6 @@
 from flask import jsonify
-from enrollment.db.models import NodeTree
-from enrollment import app, db
-from enrollment.my_logs.logg import info_log, warning_log
+from app import app, db, NodeTree
+from app.my_logs.logg import info_log, warning_log
 
 
 def delete_one_node(node_id: int) -> None:

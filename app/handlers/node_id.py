@@ -1,10 +1,9 @@
 import json
 
 from flask import jsonify
-from enrollment.db.models import NodeTree
-from enrollment import app, db
-from enrollment.handlers.base_function import get_info
-from enrollment.my_logs.logg import info_log, warning_log
+from app import app, db, NodeTree
+from app.handlers.base_function import get_info
+from app.my_logs.logg import info_log, warning_log
 
 
 
@@ -17,7 +16,4 @@ def nodes(id_):
         return jsonify(get_info(id_)), 200
     warning_log.warning(f'/nodes/<id_>, Нет обьекта с таким id={id_} , 404')
     info_log.warning(f'/nodes/<id_>, Нет обьекта с таким id={id_} , 404')
-    return jsonify({
-        "code": 404,
-        "message": "Item not found"
-    }), 404
+    return jsonify({"code": 404,"message": "Item not found"}), 404

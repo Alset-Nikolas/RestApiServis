@@ -13,12 +13,12 @@ log_config = {
         'file_handler_info': {
             'class': 'logging.FileHandler',
             'formatter': 'my_formatter',
-            'filename': 'my_logs/info_log.log',
+            'filename': 'app/my_logs/info_log.log',
         },
         'file_handler_error': {
             'class': 'logging.FileHandler',
             'formatter': 'my_formatter',
-            'filename': 'my_logs/error_log.log',
+            'filename': 'app/my_logs/error_log.log',
         },
     },
     'loggers': {

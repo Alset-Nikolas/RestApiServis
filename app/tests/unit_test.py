@@ -7,7 +7,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from enrollment.tests.base_functions import clear_bd, create_logging, test_import
+from app.tests.base_functions import clear_bd, create_logging, test_import
 API_BASEURL = "http://localhost:5000"
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -199,11 +199,11 @@ def deep_sort_children(node):
 
 
 def print_diff(expected, response):
-    with open("../../expected.json", "w") as f:
+    with open("../../../expected.json", "w") as f:
         json.dump(expected, f, indent=2, ensure_ascii=False, sort_keys=True)
         f.write("\n")
 
-    with open("../../response.json", "w") as f:
+    with open("../../../response.json", "w") as f:
         json.dump(response, f, indent=2, ensure_ascii=False, sort_keys=True)
         f.write("\n")
 

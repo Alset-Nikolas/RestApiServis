@@ -1,4 +1,4 @@
-from enrollment.tests.base_functions import *
+from base_functions import *
 
 def check_response_node(id_leaf):
     if id_leaf is None:

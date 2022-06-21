@@ -1,10 +1,9 @@
 import datetime
-from enrollment.my_logs.logg import info_log, warning_log
+from app.my_logs.logg import info_log, warning_log
 from flask import jsonify, request
-from enrollment import app
-from enrollment.db.models import NodeTree
+from app import app, NodeTree
 from sqlalchemy import func
-from enrollment.handlers.base_function import get_info
+from app.handlers.base_function import get_info
 
 def time_valid(time, time_format):
     try:

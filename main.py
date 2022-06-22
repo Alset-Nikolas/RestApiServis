@@ -9,6 +9,5 @@ if __name__ == '__main__':
     from app.paths.imports import *
     from app.paths.delete import *
     from app.paths.node_id import *
-    # from app.paths.sales import *
-    info_log.info('1')
+    from app.paths.sales import *
     app.run(debug=True)

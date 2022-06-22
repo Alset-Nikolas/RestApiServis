@@ -264,7 +264,7 @@ def test_all():
     logger = create_logging()
     test_import(logger)
     test_nodes()
-    # test_sales()
+    test_sales()
     # test_stats()
     test_delete()
 

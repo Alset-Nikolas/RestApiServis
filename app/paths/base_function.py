@@ -3,6 +3,7 @@
 '''
 from app import db, Error, ShopUnit
 from flask import jsonify
+
 def response_error_400():
     db.session.rollback()
     db.session.add(Error(code=400, message='Validation Failed'))

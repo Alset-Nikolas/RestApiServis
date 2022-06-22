@@ -9,7 +9,7 @@ log_config = {
             'format': '%(asctime)s - %(levelname)s - %(message)s',
         },
     },
-    'handlers': {
+    'paths': {
         'file_handler_info': {
             'class': 'logging.FileHandler',
             'formatter': 'my_formatter',
@@ -23,11 +23,11 @@ log_config = {
     },
     'loggers': {
         'info_log': {
-            'handlers': ['file_handler_info'],
+            'paths': ['file_handler_info'],
             'level': 'INFO',
         },
         'warning_log': {
-            'handlers': ['file_handler_error'],
+            'paths': ['file_handler_error'],
             'level': 'WARNING',
         },
     },

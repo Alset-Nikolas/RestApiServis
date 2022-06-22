@@ -1,13 +1,31 @@
-from flask_sqlalchemy import SQLAlchemy
+import datetime
+
+print('app.__init__')
 from flask import Flask
-import os
+from app.components import create_app
 
-basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-absolute_path = basedir
-app.config['SQLALCHEMY_DATABASE_URI'] =  'sqlite:///' + os.path.join(basedir, 'app.db')
-db = SQLAlchemy(app)
+db = create_app(app)
+
+from app.components.schemas.ShopUnitType import ShopUnitType
+from app.components.schemas.ShopUnit import ShopUnit
+from app.components.schemas.ShopUnitImport import ShopUnitImport
+from app.components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
+from app.components.schemas.Error import Error
+
+db.create_all()
 
 
-from app.components.schemas.ShopUnitType import *
+CATEGORY = ShopUnitType.query.filter_by(type='CATEGORY').first()
+OFFER = ShopUnitType.query.filter_by(type='OFFER').first()
+
+if CATEGORY is None:
+    CATEGORY = ShopUnitType(type='CATEGORY')
+    db.session.add(CATEGORY)
+if OFFER is None:
+    OFFER = ShopUnitType(type='OFFER')
+    db.session.add(OFFER)
+db.session.commit()
+
+node = ShopUnit.query.filter_by(id="prob1").first()
+print(node)

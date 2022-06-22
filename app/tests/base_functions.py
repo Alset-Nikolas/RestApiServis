@@ -3,7 +3,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import logging
-from app import NodeTree, db
+from app import  db
 
 API_BASEURL = "http://localhost:5000"
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -123,63 +123,63 @@ def create_logging():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     return logger
-
-def check_bd(logger):
-    '''Проверка значений в таблице NodeTree'''
-    q_items = 0
-    for data in IMPORT_BATCHES:
-        time = data['updateDate']
-        items = data['items']
-        for item in items:
-            node_id = item['id']
-            q_items += 1
-            ans_base = NodeTree.query.filter_by(node_id=node_id).all()
-            assert len(ans_base) == 1
-            ans_base = ans_base[0]
-            assert item['type'] == ans_base.type_
-            assert item['name'] == ans_base.name
-            assert item['parentId'] == ans_base.parentId
-    assert len(NodeTree.query.all()) == q_items, f'В таблице записей {len(NodeTree.query.all())}, '
-    logger.info(f'check_bd: passed')
-
-def clear_bd(logger):
-    '''Очистка таблицы NodeTree'''
-    for node in NodeTree.query.all():
-        db.session.delete(node)
-    db.session.commit()
-    assert len(NodeTree.query.all()) == 0
-    logger.info(f'clear_bd: passed')
-
+#
+# def check_bd(logger):
+#     '''Проверка значений в таблице NodeTree'''
+#     q_items = 0
+#     for data in IMPORT_BATCHES:
+#         time = data['updateDate']
+#         items = data['items']
+#         for item in items:
+#             node_id = item['id']
+#             q_items += 1
+#             ans_base = NodeTree.query.filter_by(node_id=node_id).all()
+#             assert len(ans_base) == 1
+#             ans_base = ans_base[0]
+#             assert item['type'] == ans_base.type_
+#             assert item['name'] == ans_base.name
+#             assert item['parentId'] == ans_base.parentId
+#     assert len(NodeTree.query.all()) == q_items, f'В таблице записей {len(NodeTree.query.all())}, '
+#     logger.info(f'check_bd: passed')
+#
+# def clear_bd(logger):
+#     '''Очистка таблицы NodeTree'''
+#     for node in NodeTree.query.all():
+#         db.session.delete(node)
+#     db.session.commit()
+#     assert len(NodeTree.query.all()) == 0
+#     logger.info(f'clear_bd: passed')
+#
 def test_import(logger):
     '''Заполнение таблицы значениями для теста'''
     for index, batch in enumerate(IMPORT_BATCHES):
         status, x = request("/imports", method="POST", data=batch)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info(f'test import passed.')
-    check_bd(logger)
-
-def add_new_category(logger):
-    id_tv_category = '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
-    id_leaf = '21312312314123123123ZZZZZ'
-    new_category = {
-        "items": [
-            {
-                "type": 'CATEGORY',
-                "name": 'Plasma tv',
-                "id": f'21312312314123123123',
-                "parentId": id_tv_category,
-            },
-            {
-                "type": 'OFFER',
-                "name": 'Телевизор Haier 43 Smart TV MX',
-                "id": id_leaf,
-                "parentId": '21312312314123123123',
-                "price": 29999
-            },
-        ],
-        "updateDate": "2022-02-03T12:00:00.000Z"
-    }
-    status, x = request("/imports", method="POST", data=new_category)
-    assert status == 200, f"Expected HTTP status code 200, got {status}"
-    logger.info('Добавали новую категорию Plasma tv')
-    return id_leaf
+    # check_bd(logger)
+#
+# def add_new_category(logger):
+#     id_tv_category = '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
+#     id_leaf = '21312312314123123123ZZZZZ'
+#     new_category = {
+#         "items": [
+#             {
+#                 "type": 'CATEGORY',
+#                 "name": 'Plasma tv',
+#                 "id": f'21312312314123123123',
+#                 "parentId": id_tv_category,
+#             },
+#             {
+#                 "type": 'OFFER',
+#                 "name": 'Телевизор Haier 43 Smart TV MX',
+#                 "id": id_leaf,
+#                 "parentId": '21312312314123123123',
+#                 "price": 29999
+#             },
+#         ],
+#         "updateDate": "2022-02-03T12:00:00.000Z"
+#     }
+#     status, x = request("/imports", method="POST", data=new_category)
+#     assert status == 200, f"Expected HTTP status code 200, got {status}"
+#     logger.info('Добавали новую категорию Plasma tv')
+#     return id_leaf

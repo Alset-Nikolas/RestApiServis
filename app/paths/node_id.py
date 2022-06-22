@@ -2,7 +2,7 @@ import json
 
 from flask import jsonify
 from app import app, db, NodeTree
-from app.handlers.base_function import get_info
+from app.paths.base_function import get_info
 from app.my_logs.logg import info_log, warning_log
 
 

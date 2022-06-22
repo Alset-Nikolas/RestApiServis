@@ -1,5 +1,5 @@
 import datetime
-from app import app, db, NodeTree
+from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
 from flask import request, jsonify
 from app.my_logs.logg import info_log, warning_log
 
@@ -21,9 +21,12 @@ def valid_request_json(data: dict, time_format: str) -> bool:
         return False
 
 
-def is_category(node_id: str) -> bool:
-    node = NodeTree.query.filter_by(node_id=node_id).first()
-    return node.type_ == 'CATEGORY'
+def is_category(node_id: object) -> bool:
+    if node_id is None:
+        return True
+    node = ShopUnit.query.filter_by(id=node_id).first()
+    category_obj = node.type
+    return category_obj.type == 'CATEGORY'
 
 
 def valid_structure_item(item: dict) -> bool:
@@ -38,13 +41,13 @@ def valid_structure_item(item: dict) -> bool:
 
 def valid_item(item: dict) -> bool:
     parent_id = value_or_none(dict_=item, key_='parentId')
-    price = value_or_zero(dict_=item, key_='price')
-    if (parent_id is not None) and (not is_category(parent_id)):
+    price = value_or_none(dict_=item, key_='price')
+    if not is_category(parent_id):
         info_log.warning(f'POST:/imports родителем может быть только категория')
         warning_log.warning(
             f'POST:/imports Проблемы с отдельной структурой item (price) :\nitem={item}\n, 404')
         return False
-    if price < 0:
+    if price is not None and price < 0:
         info_log.warning(f'POST:/imports цена должна быть больше 0')
         warning_log.warning(
             f'POST:/imports Проблемы с отдельной структурой item (price) :\nitem={item}\n, 404')
@@ -57,45 +60,81 @@ def value_or_none(dict_: dict, key_: str) -> object:
         return dict_[key_]
     return None
 
+def add_child(id_child, id_parent):
+    parent = ShopUnit.query.filter_by(id=id_parent).first()
+    if parent:
+        new_child = ShopUnit.query.filter_by(id=id_child).first()
 
-def value_or_zero(dict_: dict, key_: str) -> int:
-    if key_ in dict_:
-        return dict_[key_]
-    return 0
+        if parent.children is not None:
+            parent.children = list(parent.children) +[new_child.id]
+        else:
+            parent.children = [new_child.id]
+
+def check_type_context(type, price):
+    if type=='CATEGORY':
+        if price is not None:
+            return False
+    if type == 'OFFER':
+        if price is None or price < 0:
+            return False
+    return True
 
 
-def add_node(node_id: str, parentId: object, name: str, type_: str, price: int, time_: datetime) -> None:
-    new_node = NodeTree(node_id=node_id,
-                        parentId=parentId,
-                        name=name,
-                        type_=type_,
-                        price=price,
-                        time_=time_,
-                        childs=0)
+
+
+
+def add_node(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
+    new_node = ShopUnit(id=node_id,name=name,date=time_,type=type_)
+    new_node.parentId = parentId
+    add_child(id_child=node_id, id_parent=parentId)
+    new_node.price = price
     db.session.add(new_node)
+
+    save_import_fact(node_id, name, parentId, type_, price)
+
     info_log.info(f'POST:/imports Новый обьект id={node_id}, 200')
 
 
 def update_parent(node_id: object, diff_price: int, time_update: datetime, diff_child: int) -> None:
-    print('update_parent')
-    print(node_id, diff_price)
+
     if node_id is None:
         return
-    node = NodeTree.query.filter_by(node_id=node_id).first()
-    node.price += diff_price
-    node.childs += diff_child
+    node = ShopUnit.query.filter_by(id=node_id).first()
+    # node.price += diff_price
+    # node.childs += diff_child
     node.time_ = time_update
     parent_id = node.parentId
     update_parent(node_id=parent_id, diff_price=diff_price, time_update=time_update, diff_child=diff_child)
 
+def save_import_fact(node_id, name, parentId, type, price):
+    unit_import = ShopUnitImport.query.filter_by(id=node_id).first()
+    if unit_import is None:
+        unit_import = ShopUnitImport(id=node_id, name=name, type=type)
 
-def update_node(node_id: str, parentId: object, name: str, type_: str, price: int, time_: datetime) -> None:
-    node = NodeTree.query.filter_by(node_id=node_id).first()
+    unit_import.name = name
+    unit_import.parentId = parentId
+    unit_import.type = type
+    unit_import.price = price
+    db.session.add(unit_import)
+
+def save_request_fact(ids, update_date):
+    new_import_request = ShopUnitImportRequest()
+    new_import_request.items = list(ids)
+    new_import_request.updateDate = update_date
+    db.session.add(new_import_request)
+
+def update_node(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
+    node = ShopUnit.query.filter_by(id=node_id).first()
     node.parentId = parentId
+    add_child(id_child=node_id, id_parent=parentId)
     node.name = name
-    node.type_ = type_
+    node.type = type_
     node.price = price
-    node.time_ = time_
+    node.data = time_
+    db.session.add(node)
+
+    save_import_fact(node_id, name, parentId, type_, price)
+
     info_log.info(
         f'POST:/imports Обновление обьекта id={node_id} name={name}, price={price}, date={time_}, 200')
 
@@ -130,19 +169,22 @@ def imports():
             db.session.rollback()
             return jsonify({"code": 400, "message": "Validation Failed"}), 400
         new_parent_id = value_or_none(dict_=item, key_='parentId')
-        price = value_or_zero(dict_=item, key_='price')
-        node = NodeTree.query.filter_by(node_id=item['id']).first()
+        price = value_or_none(dict_=item, key_='price')
+        node = ShopUnit.query.filter_by(id=item['id']).first()
+        type_obj = ShopUnitType.query.filter_by(type=item['type']).first()
+
+        if not check_type_context(type_obj.type, price):
+            db.session.rollback()
+            return jsonify({"code": 400, "message": "Validation Failed"}), 400
 
         if node is not None:
-            print(node.node_id, node.parentId)
             old_price = node.price
             old_parent_id = node.parentId
-            print('old_parent_id', old_parent_id)
             update_node(
                 node_id=item['id'],
                 parentId=new_parent_id,
                 name=item['name'],
-                type_=item['type'],
+                type_=type_obj,
                 price=price,
                 time_=update_date
             )
@@ -154,22 +196,23 @@ def imports():
                 node_id=item['id'],
                 parentId=new_parent_id,
                 name=item['name'],
-                type_=item['type'],
+                type_=type_obj,
                 price=price,
                 time_=update_date
             )
-        diff_child = int(item['type'] == 'OFFER')
+        # diff_child = int(item['type'] == 'OFFER')
 
-        if old_parent_id is None :
-            update_parent(new_parent_id, diff_price=price, time_update=update_date, diff_child=diff_child)
-        elif old_parent_id == new_parent_id:
-            update_parent(new_parent_id, diff_price=price - old_price, time_update=update_date, diff_child=0)
-        else:
-            update_parent(old_parent_id, diff_price=-old_price, time_update=update_date,
-                          diff_child=-diff_child)
-            update_parent(new_parent_id, diff_price=price, time_update=update_date,
-                          diff_child=diff_child)
-
+        # if old_parent_id is None :
+        #     update_parent(new_parent_id, diff_price=price, time_update=update_date, diff_child=diff_child)
+        # elif old_parent_id == new_parent_id:
+        #     update_parent(new_parent_id, diff_price=price - old_price, time_update=update_date, diff_child=0)
+        # else:
+        #     update_parent(old_parent_id, diff_price=-old_price, time_update=update_date,
+        #                   diff_child=-diff_child)
+        #     update_parent(new_parent_id, diff_price=price, time_update=update_date,
+        #                   diff_child=diff_child)
+    #
+    save_request_fact(ids, update_date)
 
     db.session.commit()
     return '', 200

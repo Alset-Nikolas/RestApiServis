@@ -335,25 +335,25 @@ def test_valid_update_parent():
 
 if __name__ == "__main__":
     logger = create_logging()
-    clear_bd(logger)
+    # clear_bd(logger)
     test_import(logger)
-    all_node_ids = [x.node_id for x in NodeTree.query.all()]
-    for i, node in enumerate(all_node_ids):
-        test_valid_date(node, add_days=i + 1)
-    logger.info(f'test_date: passed')
-    for i, node in enumerate(all_node_ids):
-        test_price(node, add_price=i + 1)
-    logger.info(f'test_price: passed')
-
-    test_no_valid_date()
-    test_no_valid_type()
-    test_no_valid_price()
-    test_no_valid_name()
-    test_no_valid_id()
-    test_no_valid_name_int()
-    test_valid_name_str()
-    test_no_valid_child()
-    test_valid_child()
-
-    test_valid_update_parent()
+    # all_node_ids = [x.node_id for x in NodeTree.query.all()]
+    # for i, node in enumerate(all_node_ids):
+    #     test_valid_date(node, add_days=i + 1)
+    # logger.info(f'test_date: passed')
+    # for i, node in enumerate(all_node_ids):
+    #     test_price(node, add_price=i + 1)
+    # logger.info(f'test_price: passed')
+    #
+    # test_no_valid_date()
+    # test_no_valid_type()
+    # test_no_valid_price()
+    # test_no_valid_name()
+    # test_no_valid_id()
+    # test_no_valid_name_int()
+    # test_valid_name_str()
+    # test_no_valid_child()
+    # test_valid_child()
+    #
+    # test_valid_update_parent()
 

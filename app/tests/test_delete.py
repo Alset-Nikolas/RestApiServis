@@ -1,5 +1,5 @@
 from base_functions import *
-
+from app import app, db, ShopUnit
 START_TREE = {
   "children": [
     {
@@ -78,40 +78,44 @@ START_TREE = {
 
 
 def check_children(delete_id):
-    children_del_node = NodeTree.query.filter_by(parentId=delete_id).all()
+    children_del_node = ShopUnit.query.filter_by(parentId=delete_id).all()
     for child in children_del_node:
         id_child = child.node_id
         status, _ = request(f"/nodes/{id_child}", json_response=True)
         assert status == 404, f"Expected HTTP status code 404, got {status}"
 
-def check_parent(parent_info_before_del, del_node_before_del):
-    parent = NodeTree.query.filter_by(node_id=parent_info_before_del['id']).first()
+def check_parent(id_node, parent_info_before_del, del_node_before_del):
+    parent = ShopUnit.query.filter_by(id=parent_info_before_del['id']).first()
     if del_node_before_del['type'] == 'OFFER':
-        assert parent.childs == parent_info_before_del['q_children'] - 1, f'После удаления OFFER ожидалось {parent_info_before_del["q_children"] - 1}, получили {parent.childs} ,Параметры родителя: name={parent.name}, id={parent.node_id}'
+        cop = parent_info_before_del['children'].copy()
+        cop.pop(cop.index(id_node))
+        assert sorted(parent.children) == sorted(cop), f'После удаления OFFER ожидалось {sorted(cop)}, получили {sorted(parent.children)} ,Параметры родителя: name={parent.name}, id={parent.id}'
     else:
-        assert parent.childs == parent_info_before_del['q_children'] - del_node_before_del['q_children'], f'у предка {parent.name}  детей={parent.childs}, а должно быть {parent_info_before_del["q_children"] - del_node_before_del["q_children"]},Параметры родителя: name={parent.name}, id={parent.node_id}'
-    assert parent.price == parent_info_before_del['price'] - del_node_before_del['price'], f'у предка {parent.name}  денег={parent.price}, а должно быть {parent_info_before_del["price"] - del_node_before_del["price"]}, id={parent.node_id}'
+        cop =  sorted(list(set(parent_info_before_del['children']) - set(del_node_before_del['children'])))
+        assert parent.children == cop, f'у предка {parent.name}  дети={parent.children}, а должно быть {cop},Параметры родителя: name={parent.name}, id={parent.id}'
 
-def check_parents(ancestors_info_before_del, del_node_before_del):
+def check_parents(id_node, ancestors_info_before_del, del_node_before_del):
     for parent_info_before_del in ancestors_info_before_del:
-        check_parent(parent_info_before_del, del_node_before_del)
+        check_parent(id_node, parent_info_before_del, del_node_before_del)
     return
 
+
 def delete_node(delete_id):
-    del_node = NodeTree.query.filter_by(node_id=delete_id).first()
+    del_node = ShopUnit.query.filter_by(id=delete_id).first()
     parent_id = del_node.parentId
+
     del_node_before_del = {
-        'type': del_node.type_,
-        'q_children': del_node.childs,
+        'type': del_node.type.type,
+        'children': [] if del_node.children is None else list(del_node.children ),
         'price': del_node.price,
     }
     ancestors_info_before_del = []
     while parent_id is not None:
-        parent = NodeTree.query.filter_by(node_id=parent_id).first()
+        parent = ShopUnit.query.filter_by(id=parent_id).first()
         parent_info_before_del = {
             'id': parent_id,
             'price': parent.price,
-            'q_children': parent.childs,
+            'children': list(parent.children),
         }
         ancestors_info_before_del.append(parent_info_before_del)
         parent_id = parent.parentId
@@ -127,7 +131,7 @@ def delete_node(delete_id):
 
 def test_valid_delete(id_node):
     parent_info_before_del, del_node_before_del = delete_node(id_node)
-    check_parents(parent_info_before_del, del_node_before_del)
+    check_parents(id_node, parent_info_before_del, del_node_before_del)
     check_children(id_node)
 
 
@@ -156,7 +160,7 @@ if __name__ == "__main__":
     clear_bd(logger)
     test_import(logger)
     add_new_category(logger)
-    for node_id in [x.node_id for x in NodeTree.query.all()]:
+    for node_id in [x.id for x in ShopUnit.query.all()]:
         test_valid_delete(node_id)
         clear_bd(logger)
         test_import(logger)

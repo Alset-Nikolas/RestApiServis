@@ -1,4 +1,5 @@
 from base_functions import *
+from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
 
 def check_response_node(id_leaf):
     if id_leaf is None:
@@ -11,16 +12,24 @@ def check_response_node(id_leaf):
         assert response['name'] is not None, f"name is None"
         assert response['children'] is None, f"children is not None"
     else:
-        children = NodeTree.query.filter_by(parentId=id_leaf).all()
-        node = NodeTree.query.filter_by(node_id=id_leaf).first()
-        q_children = len(children)
-        if q_children == 0:
-            assert response['children'] is None
-            assert response['price'] == 0
-        else:
-            assert q_children == len(response['children'])
+        node = ShopUnit.query.filter_by(id=id_leaf).first()
+        children = node.children
 
-            assert response['price'] == sum([x.price for x in children])//node.childs
+        q_offer = 0
+        sum_ =0
+        box = []
+        while children != []:
+            for child_id in children:
+                child = ShopUnit.query.filter_by(id=child_id).first()
+                if child.type.type=='OFFER':
+                    q_offer+=1
+                    sum_ += child.price
+                else:
+                    box += child.children
+            children = box
+            box = []
+
+        assert response['price'] == sum_//q_offer,f'Ждали сумму={sum_//q_offer} Получили={response["price"]} id={id_leaf}'
     id_parent = response['parentId']
     check_response_node(id_parent)
 
@@ -30,6 +39,6 @@ if __name__ == "__main__":
     clear_bd(logger)
     test_import(logger)
     add_new_category(logger)
-    for id_ in [x.node_id for x in NodeTree.query.filter_by(childs=0).all()]:
+    for id_ in [x.id for x in ShopUnit.query.filter_by(children=None).all()]:
         check_response_node(id_)
     logger.info('check_response_node: passed')

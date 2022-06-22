@@ -158,29 +158,29 @@ def test_import(logger):
         assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info(f'test import passed.')
     # check_bd(logger)
-#
-# def add_new_category(logger):
-#     id_tv_category = '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
-#     id_leaf = '21312312314123123123ZZZZZ'
-#     new_category = {
-#         "items": [
-#             {
-#                 "type": 'CATEGORY',
-#                 "name": 'Plasma tv',
-#                 "id": f'21312312314123123123',
-#                 "parentId": id_tv_category,
-#             },
-#             {
-#                 "type": 'OFFER',
-#                 "name": 'Телевизор Haier 43 Smart TV MX',
-#                 "id": id_leaf,
-#                 "parentId": '21312312314123123123',
-#                 "price": 29999
-#             },
-#         ],
-#         "updateDate": "2022-02-03T12:00:00.000Z"
-#     }
-#     status, x = request("/imports", method="POST", data=new_category)
-#     assert status == 200, f"Expected HTTP status code 200, got {status}"
-#     logger.info('Добавали новую категорию Plasma tv')
-#     return id_leaf
+
+def add_new_category(logger):
+    id_tv_category = '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
+    id_leaf = '21312312314123123123ZZZZZ'
+    new_category = {
+        "items": [
+            {
+                "type": 'CATEGORY',
+                "name": 'Plasma tv',
+                "id": f'21312312314123123123',
+                "parentId": id_tv_category,
+            },
+            {
+                "type": 'OFFER',
+                "name": 'Телевизор Haier 43 Smart TV MX',
+                "id": id_leaf,
+                "parentId": '21312312314123123123',
+                "price": 29999
+            },
+        ],
+        "updateDate": "2022-02-03T12:00:00.000Z"
+    }
+    status, x = request("/imports", method="POST", data=new_category)
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
+    logger.info('Добавали новую категорию Plasma tv')
+    return id_leaf

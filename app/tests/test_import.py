@@ -1,6 +1,6 @@
 import datetime
 from base_functions import *
-from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
+from app import app, db, ShopUnit
 
 
 def test_no_valid_date():

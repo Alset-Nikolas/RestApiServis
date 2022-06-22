@@ -47,7 +47,7 @@ def test_valid_delete(id_node):
     check_children(id_node)
 
 
-def test_no_valid_delete():
+def test_no_valid_delete(logger):
     ids = ["null"]
     for delete_id in ids:
         status, _ = request(f"/delete/{delete_id}", method="DELETE")
@@ -66,9 +66,7 @@ def test_no_valid_delete():
 
 
 
-
-if __name__ == "__main__":
-    logger = create_logging()
+def test_all(logger):
     clear_bd(logger)
     test_import(logger)
     add_new_category(logger)
@@ -78,7 +76,11 @@ if __name__ == "__main__":
         test_import(logger)
         add_new_category(logger)
     logger.info('check_delete: passed')
-    test_no_valid_delete()
+    test_no_valid_delete(logger)
     logger.info('check_delete: test_no_valid_delete')
+
+if __name__ == "__main__":
+    logger = create_logging()
+    test_all(logger)
 
 

@@ -4,6 +4,7 @@
 from app import db, Error, ShopUnit
 from flask import jsonify
 
+
 def response_error_400():
     db.session.rollback()
     db.session.add(Error(code=400, message='Validation Failed'))
@@ -18,7 +19,7 @@ def response_error_404():
     return jsonify({"code": 404, "message": "Item not found"}), 404
 
 
-def delete_child(id_child, id_parent):
+def delete_child(id_child: str, id_parent: str) -> None:
     parent = ShopUnit.query.filter_by(id=id_parent).first()
     if parent:
         if parent.children is not None:

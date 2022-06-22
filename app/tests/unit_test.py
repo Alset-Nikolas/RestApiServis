@@ -7,7 +7,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from app.tests.base_functions import create_logging, test_import
+from base_functions import create_logging, test_import, clear_bd
 API_BASEURL = "http://localhost:5000"
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -260,8 +260,8 @@ def test_delete():
     print("Test delete passed.")
 
 
-def test_all():
-    logger = create_logging()
+def test_all(logger):
+    clear_bd(logger)
     test_import(logger)
     test_nodes()
     test_sales()
@@ -269,7 +269,7 @@ def test_all():
     test_delete()
 
 
-def main():
+def main(logger):
     global API_BASEURL
     test_name = None
     for arg in sys.argv[1:]:
@@ -282,7 +282,7 @@ def main():
         API_BASEURL = API_BASEURL[:-1]
 
     if test_name is None:
-        test_all()
+        test_all(logger)
     else:
         test_func = globals().get(f"test_{test_name}")
         if not test_func:
@@ -292,4 +292,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    logger = create_logging()
+    main(logger)

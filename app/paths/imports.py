@@ -2,15 +2,20 @@ import datetime
 from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
 from flask import request, jsonify
 from app.my_logs.logg import info_log, warning_log
-from .base_function import delete_child
+from .base_function import delete_child, response_error_400, response_error_404
+
 
 def valid_request_json(data: dict, time_format: str) -> bool:
-    '''Проверка форматы даты и основной структуры'''
+    '''
+        Проверка форматы даты и основной структуры
+    '''
+
     if 'items' not in data or 'updateDate' not in data or len(data) != 2:
         info_log.warning('POST:/imports Проблемы с общей структурой входных данных')
         warning_log.warning(
             f'POST:/imports Проблемы с общей структурой входных данных:\ndata={data}\n, 400')
         return False
+
     try:
         datetime.datetime.strptime(data['updateDate'], time_format)
         return True
@@ -30,6 +35,9 @@ def is_category(node_id: object) -> bool:
 
 
 def valid_structure_item(item: dict) -> bool:
+    '''
+        Проверяем все ли необходимые параметры нам передали.
+    '''
     if item['type'] in ['CATEGORY', 'OFFER']:
         if all(key in item for key in ['id', 'name', 'type']) and item['name'] is not None:
             return True
@@ -40,6 +48,9 @@ def valid_structure_item(item: dict) -> bool:
 
 
 def valid_item(item: dict) -> bool:
+    '''
+        Проверка: Дочерние эл-ты могут быть только у CATEGORY
+    '''
     parent_id = value_or_none(dict_=item, key_='parentId')
     price = value_or_none(dict_=item, key_='price')
     if not is_category(parent_id):
@@ -62,7 +73,7 @@ def value_or_none(dict_: dict, key_: str) -> object:
     return None
 
 
-def add_child(id_child, id_parent):
+def add_child(id_child: str, id_parent: object) -> None:
     parent = ShopUnit.query.filter_by(id=id_parent).first()
     if parent:
         if parent.children is not None:
@@ -71,8 +82,10 @@ def add_child(id_child, id_parent):
             parent.children = [id_child]
 
 
-
-def check_type_context(type, price):
+def check_type_context(type: str, price: object) -> bool:
+    '''
+        Проверка параметров, зависящих от типа
+    '''
     if type == 'CATEGORY':
         if price is not None:
             info_log.warning(
@@ -104,9 +117,10 @@ def update_parent(node_id: object, time_update: datetime) -> None:
     node = ShopUnit.query.filter_by(id=node_id).first()
     node.date = time_update
     db.session.add(node)
-    update_parent(node_id=node.parentId,time_update=time_update)
+    update_parent(node_id=node.parentId, time_update=time_update)
 
-def save_import_fact(node_id, name, parentId, type, price):
+
+def save_import_fact(node_id: str, name: str, parentId: object, type: str, price: object) -> None:
     unit_import = ShopUnitImport.query.filter_by(id=node_id).first()
     if unit_import is None:
         unit_import = ShopUnitImport(id=node_id, name=name, type=type)
@@ -117,14 +131,15 @@ def save_import_fact(node_id, name, parentId, type, price):
     db.session.add(unit_import)
 
 
-def save_request_fact(ids, update_date):
+def save_request_fact(ids: set, update_date: datetime):
     new_import_request = ShopUnitImportRequest()
     new_import_request.items = list(ids)
     new_import_request.updateDate = update_date
     db.session.add(new_import_request)
 
 
-def update_node(node_id: str, old_parentId, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
+def update_node(node_id: str, old_parentId, parentId: object, name: str, type_: str, price: object,
+                time_: datetime) -> None:
     node = ShopUnit.query.filter_by(id=node_id).first()
     node.parentId = parentId
     delete_child(id_child=node_id, id_parent=old_parentId)
@@ -142,19 +157,15 @@ def update_node(node_id: str, old_parentId, parentId: object, name: str, type_: 
 
 
 def id_duplicate(ids: set, new_id: str) -> bool:
+    '''
+            Проверка на наличие дубликатов id.
+    '''
     if new_id not in ids:
         ids.add(new_id)
         return False
     info_log.warning(
-        f'POST:/imports В 1 запросе не может быть дубликатов id={ids} + {new_id}, 400',)
+        f'POST:/imports В 1 запросе не может быть дубликатов id={ids} + {new_id}, 400', )
     return True
-
-
-def response_error():
-    db.session.rollback()
-    db.session.add(Error(code=400, message='Validation Failed'))
-    db.session.commit()
-    return jsonify({"code": 400, "message": "Validation Failed"}), 400
 
 
 @app.route('/imports', methods=['POST'])
@@ -163,29 +174,30 @@ def imports():
     info_log.info('handler:POST:/imports ')
 
     if not request.is_json:
-        return response_error()
+        return response_error_400()
 
     data = request.get_json()
     time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
     if not valid_request_json(data, time_format):
-        return response_error()
+        return response_error_400()
 
     update_date = datetime.datetime.strptime(data['updateDate'], time_format)
     update_date = update_date.isoformat()
     ids = set()
     for item in data['items']:
-        print("not valid_structure_item(item) or not valid_item(item) or id_duplicate(ids, item['id'])", not valid_structure_item(item) ,
-              not valid_item(item) , id_duplicate(ids, item['id']))
+        print("not valid_structure_item(item) or not valid_item(item) or id_duplicate(ids, item['id'])",
+              not valid_structure_item(item),
+              not valid_item(item), id_duplicate(ids, item['id']))
         if (not valid_structure_item(item)) or (not valid_item(item)) or (not id_duplicate(ids, item['id'])):
-            return response_error()
+            return response_error_400()
         new_parent_id = value_or_none(dict_=item, key_='parentId')
         price = value_or_none(dict_=item, key_='price')
         node = ShopUnit.query.filter_by(id=item['id']).first()
         type_obj = ShopUnitType.query.filter_by(type=item['type']).first()
         print(not check_type_context(type_obj.type, price))
         if not check_type_context(type_obj.type, price):
-            return response_error()
+            return response_error_400()
         old_parent_id = None
         if node is not None:
             print(node.name, update_date)
@@ -211,11 +223,10 @@ def imports():
                 time_=update_date
             )
 
-        if new_parent_id is not None :
-            update_parent(new_parent_id,time_update=update_date)
+        if new_parent_id is not None:
+            update_parent(new_parent_id, time_update=update_date)
         # if old_parent_id is not None:
         #     update_parent(old_parent_id, time_update=update_date)
-
 
     save_request_fact(ids, update_date)
 

@@ -34,11 +34,15 @@ def check_response_node(id_leaf):
     check_response_node(id_parent)
 
 
-if __name__ == "__main__":
-    logger = create_logging()
+def test_all(logger):
     clear_bd(logger)
     test_import(logger)
     add_new_category(logger)
     for id_ in [x.id for x in ShopUnit.query.filter_by(children=None).all()]:
         check_response_node(id_)
     logger.info('check_response_node: passed')
+
+
+if __name__ == "__main__":
+    logger = create_logging()
+    test_all(logger)

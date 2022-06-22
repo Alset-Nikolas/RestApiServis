@@ -3,7 +3,7 @@ from base_functions import *
 from app import app, db, ShopUnit
 
 
-def test_no_valid_date():
+def test_no_valid_date(logger):
     '''Проверка на валидность updateDate. Ожидаем только iso формат'''
     update_node = {
         "items": [
@@ -22,7 +22,7 @@ def test_no_valid_date():
     logger.info(f'test_no_valid_date: passed')
 
 
-def test_no_valid_type():
+def test_no_valid_type(logger):
     '''Типы у обьектов могут быть только OFFER или CATEGORY'''
     update_node = {
         "items": [
@@ -41,7 +41,7 @@ def test_no_valid_type():
     logger.info(f'test_no_valid_type: passed')
 
 
-def test_no_valid_price():
+def test_no_valid_price(logger):
     '''price >=0 '''
     update_node = {
         "items": [
@@ -60,7 +60,7 @@ def test_no_valid_price():
     logger.info(f'test_no_valid_price: passed')
 
 
-def test_no_valid_name():
+def test_no_valid_name(logger):
     '''name != None'''
     update_node = {
         "items": [
@@ -79,7 +79,7 @@ def test_no_valid_name():
     logger.info(f'test_no_valid_name: passed')
 
 
-def test_no_valid_name_int():
+def test_no_valid_name_int(logger):
     update_node = {
         "items": [
             {
@@ -97,7 +97,7 @@ def test_no_valid_name_int():
     logger.info(f'test_no_valid_name: passed')
 
 
-def test_no_valid_child():
+def test_no_valid_child(logger):
     '''Родителем OFFER - только CATEGORY'''
     update_node = {
         "items": [
@@ -124,7 +124,7 @@ def test_no_valid_child():
     logger.info(f'test_no_valid_name: passed')
 
 
-def test_valid_child():
+def test_valid_child(logger):
     '''Родителем OFFER - только CATEGORY'''
     update_node = {
         "items": [
@@ -151,7 +151,7 @@ def test_valid_child():
     logger.info(f'test_no_valid_name: passed')
 
 
-def test_valid_name_str():
+def test_valid_name_str(logger):
     update_node = {
         "items": [
             {
@@ -169,7 +169,7 @@ def test_valid_name_str():
     logger.info(f'test_valid_name_str: passed')
 
 
-def test_no_valid_id():
+def test_no_valid_id(logger):
     '''Дубликатов быть не может'''
     update_node = {
         "items": [
@@ -311,7 +311,7 @@ def update_parent(node_id, new_parent_id):
 
 
 
-def test_valid_update_parent():
+def test_valid_update_parent(logger):
     '''Если у категории или товара обновить родителя на'''
     clear_bd(logger)
     test_import(logger)
@@ -324,9 +324,7 @@ def test_valid_update_parent():
 
 
 
-
-if __name__ == "__main__":
-    logger = create_logging()
+def test_all(logger):
     clear_bd(logger)
     test_import(logger)
     all_node_ids = [x.id for x in ShopUnit.query.all()]
@@ -336,16 +334,19 @@ if __name__ == "__main__":
     for i, node in enumerate(all_node_ids):
         test_price(node, add_price=i + 1)
     logger.info(f'test_price: passed')
-    #
-    test_no_valid_date()
-    test_no_valid_type()
-    test_no_valid_price()
-    test_no_valid_name()
-    test_no_valid_id()
-    test_no_valid_name_int()
-    test_valid_name_str()
-    test_no_valid_child()
-    test_valid_child()
+    test_no_valid_date(logger)
+    test_no_valid_type(logger)
+    test_no_valid_price(logger)
+    test_no_valid_name(logger)
+    test_no_valid_id(logger)
+    test_no_valid_name_int(logger)
+    test_valid_name_str(logger)
+    test_no_valid_child(logger)
+    test_valid_child(logger)
 
-    test_valid_update_parent()
+    test_valid_update_parent(logger)
 
+if __name__ == "__main__":
+    logger = create_logging()
+    # test_all(logger)
+    test_import(logger)

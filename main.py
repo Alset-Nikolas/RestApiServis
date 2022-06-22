@@ -1,8 +1,5 @@
 #!flask/bin/python
-import os
 import sys
-
-from app import app, db
 sys.setrecursionlimit(999999)
 if __name__ == '__main__':
     from app.my_logs.logg import *
@@ -11,3 +8,4 @@ if __name__ == '__main__':
     from app.paths.node_id import *
     from app.paths.sales import *
     app.run(debug=True)
+

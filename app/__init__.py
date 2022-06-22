@@ -12,6 +12,8 @@ from app.components.schemas.ShopUnit import ShopUnit
 from app.components.schemas.ShopUnitImport import ShopUnitImport
 from app.components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
 from app.components.schemas.Error import Error
+from app.components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
+from app.components.schemas.ShopUnitStatisticResponse import ShopUnitStatisticResponse
 
 db.create_all()
 

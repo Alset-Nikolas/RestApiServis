@@ -3,6 +3,7 @@ from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error,
 from app.my_logs.logg import info_log, warning_log
 from .base_function import response_error_404, response_error_400, delete_child
 
+
 def delete_one_node(node_id: int) -> None:
     '''
         Удалить узел по id
@@ -10,7 +11,6 @@ def delete_one_node(node_id: int) -> None:
     node = ShopUnit.query.filter_by(id=node_id).first()
     info_log.info(f'/delete/<id_>  Удаляем id={node_id}. name="{node.name}"')
     db.session.delete(node)
-
 
 
 def recursively_delete_nodes(node_id: int) -> None:
@@ -33,8 +33,6 @@ def valid_id(id_: int) -> bool:
         Проверка на валидность id узла
     '''
     return isinstance(id_, str) and id_ != '' and id_ != 'None' and (id_ is not None) and id_ != 'null'
-
-
 
 
 @app.route('/delete/<id_>', methods=['DELETE'])

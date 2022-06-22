@@ -1,5 +1,6 @@
 import datetime
 from base_functions import *
+from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
 
 
 def test_no_valid_date():
@@ -132,7 +133,7 @@ def test_valid_child():
                 "name": '3',
                 "id": 'MY_ID',
                 "parentId": None,
-                "price": 1
+                "price": None
             },
             {
                 "type": 'OFFER',
@@ -146,7 +147,7 @@ def test_valid_child():
         "updateDate": "2022-02-03T12:00:00.000Z"
     }
     status, x = request("/imports", method="POST", data=update_node)
-    assert status == 200, f"Expected HTTP status code 400, got {status}"
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info(f'test_no_valid_name: passed')
 
 
@@ -196,58 +197,64 @@ def test_no_valid_id():
 
 def test_valid_date(id_node, add_days):
     def update_date():
-        node = NodeTree.query.filter_by(node_id=id_node).first()
-        new_time = node.time_ + datetime.timedelta(days=add_days)
+        node = ShopUnit.query.filter_by(id=id_node).first()
+        new_data = node.date + datetime.timedelta(days=add_days)
         update_node = {
             "items": [
                 {
-                    "type": node.type_,
+                    "type": node.type.type,
                     "name": node.name,
-                    "id": id_node,
+                    "id": node.id,
                     "parentId": node.parentId,
                     "price": node.price
                 },
             ],
-            "updateDate": new_time.strftime("%Y-%m-%dT%H:%M:%S.%f%z")[:-3] + 'Z'
+            "updateDate": new_data.strftime("%Y-%m-%dT%H:%M:%S.%f%z")[:-3] + 'Z'
         }
         status, x = request("/imports", method="POST", data=update_node)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
-        return new_time
+        return new_data
 
     new_time = update_date()
-    node = NodeTree.query.filter_by(node_id=id_node).first()
-    assert node.time_ == new_time, f"Expected datetime {new_time}, got {node.time_}, id={id_node}"
+    node = ShopUnit.query.filter_by(id=id_node).first()
+    assert node.date == new_time, f"Expected datetime {new_time}, got {node.date}, id={id_node}"
     parent_id = node.parentId
     while parent_id is not None:
-        parent = NodeTree.query.filter_by(node_id=parent_id).first()
-        assert parent.time_ == new_time, f"Expected datetime {new_time}, got {parent.time_}, id={parent_id}"
+        parent = ShopUnit.query.filter_by(id=parent_id).first()
+        assert parent.date == new_time, f"Expected datetime {new_time}, got {parent.date}, id={parent_id}"
         parent_id = parent.parentId
 
 
 def test_price(id_node, add_price):
     def remember_old_price():
-        return {x.node_id: x.price for x in NodeTree.query.all()}
+        return {x.id: x.price for x in ShopUnit.query.all()}
 
     def update_price():
-        node = NodeTree.query.filter_by(node_id=id_node).first()
-        new_price = node.price + add_price
+        node = ShopUnit.query.filter_by(id=id_node).first()
+        if node.price is None:
+            new_price = 1000
+        else:
+            new_price = node.price + add_price
         update_node = {
             "items": [
                 {
-                    "type": node.type_,
+                    "type": node.type.type,
                     "name": node.name,
                     "id": id_node,
                     "parentId": node.parentId,
                     "price": new_price
                 },
             ],
-            "updateDate": str(node.time_.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3] + 'Z')
+            "updateDate": str(node.date.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3] + 'Z')
         }
         status, x = request("/imports", method="POST", data=update_node)
-        assert status == 200, f"Expected HTTP status code 200, got {status}"
+        if node.type.type == 'OFFER':
+            assert status == 200, f"Expected HTTP status code 200, got {status}"
+        else:
+            assert status == 400, f"Expected HTTP status code 400, got {status}"
 
     def check_child(node_id, old_price):
-        childs = NodeTree.query.filter_by(parentId=node_id).all()
+        childs = ShopUnit.query.filter_by(parentId=node_id).all()
         if childs == []:
             return
         for child in childs:
@@ -258,65 +265,50 @@ def test_price(id_node, add_price):
 
     old_price = remember_old_price()
     update_price()
+    node = ShopUnit.query.filter_by(id=id_node).first()
+    if node.type.type == 'OFFER':
+        assert node.price == old_price[
+            id_node] + add_price, f"Expected price {node.price}, got {old_price[id_node] + add_price}, id={id_node}"
 
-    node = NodeTree.query.filter_by(node_id=id_node).first()
-    assert node.price == old_price[
-        id_node] + add_price, f"Expected price {node.price}, got {old_price[id_node] + add_price}, id={id_node}"
-    parent_id = node.parentId
-    while parent_id is not None:
-        parent = NodeTree.query.filter_by(node_id=parent_id).first()
 
-        assert parent.price == old_price[
-            parent_id] + add_price, f"Expected price {parent.price}, got {old_price[parent_id] + add_price}, id={parent_id}"
-        parent_id = parent.parentId
-    check_child(id_node, old_price)
 
 
 def update_parent(node_id, new_parent_id):
-    def remember_state():
-        return {x.node_id: {'price': x.price, 'childs': x.childs} for x in NodeTree.query.all()}
 
-    node = NodeTree.query.filter_by(node_id=node_id).first()
+    node = ShopUnit.query.filter_by(id=node_id).first()
     assert node is not None, f'нет такого id={node_id}'
     old_parent_id = node.parentId
     update_node = {
         "items": [
             {
-                "type": node.type_,
+                "type": node.type.type,
                 "name": node.name,
                 "id": node_id,
                 "parentId": new_parent_id,
                 "price": node.price
             }
         ],
-        "updateDate": "2022-02-03T12:00:00.000Z"
+        "updateDate": str(node.date.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3] + 'Z')
     }
-    remember_table = remember_state()
     status, x = request("/imports", method="POST", data=update_node)
     assert status == 200, f"Expected HTTP status code 200, got {status}"
 
     status, response = request(f"/nodes/{node_id}", json_response=True)
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     assert response['parentId'] == new_parent_id
+    new_parent = ShopUnit.query.filter_by(id=new_parent_id).first()
+    old_parent = ShopUnit.query.filter_by(id=old_parent_id).first()
+    if new_parent is not None:
+        assert node_id in new_parent.children, f"У нового родителя нет такого ребенка id_child={node_id}, if_parent={new_parent_id}"
+    if old_parent is not None:
+        if old_parent != new_parent:
+            assert node_id not in old_parent.children, f"У старого родителя остался ребенок id_child={node_id}, if_parent={old_parent}"
+        else:
+            assert node_id  in old_parent.children, f"Родитель не менялся id_child={node_id}, if_parent={old_parent}"
 
-    if node.type_ == 'OFFER':
-        diff_child = 1
-    else:
-        diff_child = node.childs
 
-    while old_parent_id is not None:
-        old_parent_node = NodeTree.query.filter_by(node_id=old_parent_id).first()
-        remember_table[old_parent_id]['childs'] -= diff_child
-        remember_table[old_parent_id]['price'] -= node.price
-        old_parent_id = old_parent_node.parentId
 
-    while new_parent_id is not None:
-        new_parent_node = NodeTree.query.filter_by(node_id=new_parent_id).first()
-        remember_table[new_parent_id]['childs'] += diff_child
-        remember_table[new_parent_id]['price'] += node.price
-        new_parent_id = new_parent_node.parentId
 
-    assert remember_table == remember_state()
 
 
 def test_valid_update_parent():
@@ -335,25 +327,25 @@ def test_valid_update_parent():
 
 if __name__ == "__main__":
     logger = create_logging()
-    # clear_bd(logger)
+    clear_bd(logger)
     test_import(logger)
-    # all_node_ids = [x.node_id for x in NodeTree.query.all()]
-    # for i, node in enumerate(all_node_ids):
-    #     test_valid_date(node, add_days=i + 1)
-    # logger.info(f'test_date: passed')
-    # for i, node in enumerate(all_node_ids):
-    #     test_price(node, add_price=i + 1)
-    # logger.info(f'test_price: passed')
+    all_node_ids = [x.id for x in ShopUnit.query.all()]
+    for i, node in enumerate(all_node_ids):
+        test_valid_date(node, add_days=i + 1)
+    logger.info(f'test_date: passed')
+    for i, node in enumerate(all_node_ids):
+        test_price(node, add_price=i + 1)
+    logger.info(f'test_price: passed')
     #
-    # test_no_valid_date()
-    # test_no_valid_type()
-    # test_no_valid_price()
-    # test_no_valid_name()
-    # test_no_valid_id()
-    # test_no_valid_name_int()
-    # test_valid_name_str()
-    # test_no_valid_child()
-    # test_valid_child()
-    #
-    # test_valid_update_parent()
+    test_no_valid_date()
+    test_no_valid_type()
+    test_no_valid_price()
+    test_no_valid_name()
+    test_no_valid_id()
+    test_no_valid_name_int()
+    test_valid_name_str()
+    test_no_valid_child()
+    test_valid_child()
+
+    test_valid_update_parent()
 

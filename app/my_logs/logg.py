@@ -13,12 +13,12 @@ log_config = {
         'file_handler_info': {
             'class': 'logging.FileHandler',
             'formatter': 'my_formatter',
-            'filename': 'app/my_logs/info_log.log',
+            'filename': 'info_log.log',
         },
         'file_handler_error': {
             'class': 'logging.FileHandler',
             'formatter': 'my_formatter',
-            'filename': 'app/my_logs/error_log.log',
+            'filename': 'error_log.log',
         },
     },
     'loggers': {
@@ -37,4 +37,4 @@ log_config = {
 logging.config.dictConfig(log_config)
 info_log = logging.getLogger('info_log')
 warning_log = logging.getLogger('warning_log')
-
+info_log.info('!!!!')

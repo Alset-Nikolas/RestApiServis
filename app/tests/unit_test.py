@@ -7,7 +7,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from app.tests.base_functions import clear_bd, create_logging, test_import
+from app.tests.base_functions import create_logging, test_import
 API_BASEURL = "http://localhost:5000"
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -262,10 +262,9 @@ def test_delete():
 
 def test_all():
     logger = create_logging()
-    clear_bd(logger)
     test_import(logger)
     test_nodes()
-    test_sales()
+    # test_sales()
     # test_stats()
     test_delete()
 

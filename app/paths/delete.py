@@ -1,29 +1,29 @@
 from flask import jsonify
-from app import app, db, NodeTree
+from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
 from app.my_logs.logg import info_log, warning_log
-
+from .base_function import response_error_404, response_error_400, delete_child
 
 def delete_one_node(node_id: int) -> None:
     '''
         Удалить узел по id
     '''
-    node = NodeTree.query.filter_by(node_id=node_id).first()
+    node = ShopUnit.query.filter_by(id=node_id).first()
     info_log.info(f'/delete/<id_>  Удаляем id={node_id}. name="{node.name}"')
     db.session.delete(node)
-    db.session.commit()
+
 
 
 def recursively_delete_nodes(node_id: int) -> None:
     '''
         Рекурсивно удалить детей узла из таблицы
     '''
-    childs = NodeTree.query.filter_by(parentId=node_id).all()
-    info_log.info(f'/delete/<id_> Рекурсивно удаляем id={node_id}. детей={len(childs)}')
-    if childs == []:
+    node_del = ShopUnit.query.filter_by(id=node_id).first()
+    children = node_del.children
+    info_log.info(f'/delete/<id_> Рекурсивно удаляем id={node_id}. детей={children}')
+    if children is None:
         delete_one_node(node_id)
         return
-    for child in childs:
-        child_id = child.node_id
+    for child_id in children:
         recursively_delete_nodes(child_id)
     delete_one_node(node_id)
 
@@ -35,28 +35,6 @@ def valid_id(id_: int) -> bool:
     return isinstance(id_, str) and id_ != '' and id_ != 'None' and (id_ is not None) and id_ != 'null'
 
 
-def update_parent(parent_id: int, node_del: int) -> None:
-    '''
-        Обновление цены(price) и кол-ва детей(childs) у предков
-    '''
-    while parent_id is not None:
-        parent = NodeTree.query.filter_by(node_id=parent_id).first()
-        info_log.info(
-            f'/delete/<id_> Родитель: id={parent_id} name="{parent.name}". ДО удаления: кол-во детей={parent.childs}, денег={parent.price}')
-        if node_del.type_ == 'OFFER':
-            parent.childs -= 1
-        else:
-            parent.childs -= node_del.childs
-        parent.price -= node_del.price
-        info_log.info(
-            f'/delete/<id_> Родитель: id={parent_id} name="{parent.name}". ПОСЛЕ удаления: кол-во детей={parent.childs}, денег={parent.price}')
-
-        parent_id = parent.parentId
-        db.session.commit()
-
-    else:
-        info_log.info(
-            f'/delete/<id_> Родитель: id={None}')
 
 
 @app.route('/delete/<id_>', methods=['DELETE'])
@@ -67,15 +45,16 @@ def delete(id_):
      '''
 
     if not valid_id(id_):
-        return jsonify({"code": 400, "message": "Validation Failed"}), 400
+        return response_error_400()
 
-    node_del = NodeTree.query.filter_by(node_id=id_).first()
+    node_del = ShopUnit.query.filter_by(id=id_).first()
 
     if node_del is None:
         info_log.warning(f'/delete/<id_> нет в бд id={id_}, 404')
-        return jsonify({"code": 404, "message": "Item not found"}), 404
+        return response_error_404()
 
     info_log.info(f'handler:DELETE:/delete/<id_> id_={id_} name="{node_del.name}"')
-    update_parent(parent_id=node_del.parentId, node_del=node_del)
+    delete_child(id_child=id_, id_parent=node_del.parentId)
     recursively_delete_nodes(id_)
+    db.session.commit()
     return '', 200

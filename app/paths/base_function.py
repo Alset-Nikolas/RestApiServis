@@ -1,37 +1,26 @@
 '''
     Набор функций, которые применяются в рамках hanlers
 '''
-from app import NodeTree
-
-def is_category(node) -> bool:
-    '''Является тип узла - категория'''
-    return node.type_ == 'CATEGORY'
-
-
-def calc_price(price:int, childs:int)->int:
-    '''Рассчкт средней стоимости'''
-    if childs==0:
-        return price
-    return price//childs
+from app import db, Error, ShopUnit
+from flask import jsonify
+def response_error_400():
+    db.session.rollback()
+    db.session.add(Error(code=400, message='Validation Failed'))
+    db.session.commit()
+    return jsonify({"code": 400, "message": "Validation Failed"}), 400
 
 
-def get_info(id_node:str) -> set:
-    '''Вернуть ниформацию о узле и его детей'''
-    node = NodeTree.query.filter_by(node_id=id_node).first()
-    ans = dict()
-    #todo
-    ans["childs"] = node.childs
-    ans["type"] = node.type_
-    ans["name"] = node.name
-    ans["id"] = id_node
-    ans["parentId"] = node.parentId
-    ans["date"] = str(node.time_.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3]+'Z')
-    ans['children'] = []
-    childs = NodeTree.query.filter_by(parentId=node.node_id).all()
-    if childs!= []:
-        for child in childs:
-            ans['children'].append(get_info(child.node_id))
-    ans["price"] = calc_price(node.price, node.childs)
-    if not is_category(node):
-        ans['children'] = None
-    return ans
+def response_error_404():
+    db.session.rollback()
+    db.session.add(Error(code=404, message="Item not found"))
+    db.session.commit()
+    return jsonify({"code": 404, "message": "Item not found"}), 404
+
+
+def delete_child(id_child, id_parent):
+    parent = ShopUnit.query.filter_by(id=id_parent).first()
+    if parent:
+        if parent.children is not None:
+            ch = list(parent.children)
+            ch.pop(ch.index(id_child))
+            parent.children = set(ch)

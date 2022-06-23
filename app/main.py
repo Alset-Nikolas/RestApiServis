@@ -25,8 +25,7 @@ app.register_blueprint(bp_sales)
 app.register_blueprint(bp_consoly)
 
 sys.setrecursionlimit(999999)
-def run():
-    app.run(debug=True, host='0.0.0.0')
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

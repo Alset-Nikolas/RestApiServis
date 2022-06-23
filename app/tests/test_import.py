@@ -1,6 +1,8 @@
 import datetime
 from base_functions import *
-from app import app, db, ShopUnit
+from app.main import app
+from app.db import db
+from app.components.schemas.ShopUnit import ShopUnit
 
 def test_no_valid_date(logger):
     '''Проверка на валидность updateDate. Ожидаем только iso формат'''

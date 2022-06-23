@@ -1,5 +1,6 @@
 from base_functions import *
-from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
+from app.components.schemas.ShopUnit import ShopUnit
+
 
 def check_response_node(id_leaf):
     if id_leaf is None:

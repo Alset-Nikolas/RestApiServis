@@ -1,11 +1,13 @@
 import datetime
-from app.my_logs.logg import info_log, warning_log
+from app.my_logs.logg import info_log
 from flask import jsonify, request
-from app import app,  ShopUnit, ShopUnitType
+from app.components.schemas.ShopUnit import ShopUnit
+from app.components.schemas.ShopUnitType import ShopUnitType
 from sqlalchemy import func
-from app.paths.base_function import response_error_404, response_error_400
+from app.paths.base_function import response_error_400
 from .node_id import get_info
-
+from flask import Blueprint
+bp_sales = Blueprint('sales', __name__)
 
 def time_valid(time, time_format):
     try:
@@ -24,7 +26,7 @@ def filter_date(time):
     return [get_info({}, node.id)  for node in nodes]
 
 
-@app.route('/sales', methods=['GET'])
+@bp_sales.route('/sales', methods=['GET'])
 def sales():
     '''
         Получение списка **товаров**, цена которых была обновлена за последние 24 часа включительно [now() - 24h, now()] от

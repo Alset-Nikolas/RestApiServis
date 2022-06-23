@@ -1,12 +1,12 @@
-import json
-import copy
 from flask import jsonify
-from app import app, ShopUnit
+from app.components.schemas.ShopUnit import ShopUnit
 from .base_function import response_error_404
 from app.my_logs.logg import info_log, warning_log
+from flask import Blueprint
+bp_node_id = Blueprint('node_id', __name__)
 
 
-#
+
 def get_info(ans, id_node: str) -> tuple:
     '''Вернуть ниформацию о узле и его детей'''
     node = ShopUnit.query.filter_by(id=id_node).first()
@@ -46,7 +46,7 @@ def get_info(ans, id_node: str) -> tuple:
     return ans, sum_price, offers
 
 
-@app.route('/nodes/<id_>', methods=['GET'])
+@bp_node_id.route('/nodes/<id_>', methods=['GET'])
 def nodes(id_):
     '''
         Обработчик по выводу информации по id

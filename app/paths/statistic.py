@@ -1,10 +1,11 @@
 import datetime
 from app.my_logs.logg import info_log
 from flask import jsonify, request
-from app import app, ShopUnitStatisticUnit
+from app.components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
 from sqlalchemy import func
 from app.paths.base_function import response_error_404, response_error_400
-
+from flask import Blueprint
+bp_statistic = Blueprint('statistic', __name__)
 
 def time_valid(time, time_format):
     try:
@@ -37,7 +38,7 @@ def calc_price(id, t):
 #         db.session.add(new_line)
 #         db.session.commit()
 
-@app.route('/node/<id_>/statistic', methods=['GET'])
+@bp_statistic.route('/node/<id_>/statistic', methods=['GET'])
 def statistic(id_):
     '''
          Получение статистики (истории обновлений) по товару/категории за заданный полуинтервал [from, to).

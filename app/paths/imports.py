@@ -1,10 +1,16 @@
 import datetime
 import logging
-
-from app import app, db, ShopUnitImport, ShopUnitImportRequest, ShopUnit, ShopUnitType, ShopUnitStatisticUnit
-from flask import request, jsonify
+from app.db import db
+from app.components.schemas.ShopUnitImport import ShopUnitImport
+from app.components.schemas.ShopUnit import ShopUnit
+from app.components.schemas.ShopUnitType import ShopUnitType
+from app.components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
+from app.components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
+from flask import request
 from app.my_logs.logg import info_log, warning_log
-from .base_function import delete_child, response_error_400, response_error_404
+from .base_function import delete_child, response_error_400
+from flask import Blueprint
+bp_imports = Blueprint('imports', __name__)
 
 
 def valid_request_json(data: dict, time_format: str) -> bool:
@@ -187,7 +193,7 @@ def id_duplicate(ids: set, new_id: str) -> bool:
     return True
 
 
-@app.route('/imports', methods=['POST'])
+@bp_imports.route('/imports', methods=['POST'])
 def imports():
     '''
         Обработчик для импортирования новых товаров и/или категорий.

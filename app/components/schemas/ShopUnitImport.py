@@ -1,5 +1,4 @@
-from app import db
-
+from app.db import db
 
 class ShopUnitImport(db.Model):
     id = db.Column(db.String(), primary_key=True, nullable=False, unique=True)

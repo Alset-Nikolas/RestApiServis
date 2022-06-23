@@ -1,5 +1,5 @@
 import datetime
-from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
+from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType, ShopUnitStatisticUnit
 from flask import request, jsonify
 from app.my_logs.logg import info_log, warning_log
 from .base_function import delete_child, response_error_400, response_error_404
@@ -99,8 +99,18 @@ def check_type_context(type: str, price: object) -> bool:
 
     return True
 
+def save_statistic(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
+    problem = ShopUnitStatisticUnit.query.filter_by(id=node_id).filter_by(date=time_).first()
+    if problem is None:
+        new_node = ShopUnitStatisticUnit(id=node_id, name=name, date=time_, type=type_)
+        new_node.parentId = parentId
+        new_node.price = price
+        db.session.add(new_node)
+    else:
+        print('поле updateDate монотонно возрастает по условию')
 
 def add_node(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
+
     new_node = ShopUnit(id=node_id, name=name, date=time_, type=type_)
     new_node.parentId = parentId
     add_child(id_child=node_id, id_parent=parentId)
@@ -109,6 +119,11 @@ def add_node(node_id: str, parentId: object, name: str, type_: str, price: objec
 
     save_import_fact(node_id, name, parentId, type_, price)
     info_log.info(f'POST:/imports Новый обьект id={node_id}, 200')
+
+    save_statistic(node_id, parentId, name, type_, price, time_)
+
+
+
 
 
 def update_parent(node_id: object, time_update: datetime) -> None:
@@ -155,6 +170,7 @@ def update_node(node_id: str, old_parentId, parentId: object, name: str, type_: 
     info_log.info(
         f'POST:/imports Обновление обьекта id={node_id} name={name}, price={price}, date={time_}, 200')
 
+    save_statistic(node_id, parentId, name, type_, price, time_)
 
 def id_duplicate(ids: set, new_id: str) -> bool:
     '''

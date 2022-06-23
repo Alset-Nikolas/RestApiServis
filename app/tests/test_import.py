@@ -2,7 +2,6 @@ import datetime
 from base_functions import *
 from app import app, db, ShopUnit
 
-
 def test_no_valid_date(logger):
     '''Проверка на валидность updateDate. Ожидаем только iso формат'''
     update_node = {
@@ -322,6 +321,9 @@ def test_valid_update_parent(logger):
     update_parent(node_id='73bc3b36-02d1-4245-ab35-3106c9ee1c65', new_parent_id='069cb8d7-bbdd-47d3-ad8f-82ef4c269df1')
     update_parent(node_id='74b81fda-9cdc-4b63-8927-c978afed5cf4', new_parent_id='069cb8d7-bbdd-47d3-ad8f-82ef4c269df1')
 
+def update_bd(logger):
+    clear_bd(logger)
+    test_import(logger)
 
 
 def test_all(logger):
@@ -348,5 +350,4 @@ def test_all(logger):
 
 if __name__ == "__main__":
     logger = create_logging()
-    # test_all(logger)
-    test_import(logger)
+    test_all(logger)

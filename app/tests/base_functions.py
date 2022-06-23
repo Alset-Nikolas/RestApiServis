@@ -4,7 +4,7 @@ import urllib.parse
 import urllib.request
 import logging
 from app import  db
-from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
+from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType, ShopUnitStatisticUnit
 
 API_BASEURL = "http://localhost:5000"
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -149,7 +149,9 @@ def clear_bd(logger):
         db.session.delete(node)
     db.session.commit()
     assert len(ShopUnit.query.all()) == 0
+
     logger.info(f'clear_bd: passed')
+
 
 def test_import(logger):
     '''Заполнение таблицы значениями для теста'''

@@ -13,7 +13,7 @@ from app.components.schemas.ShopUnitImport import ShopUnitImport
 from app.components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
 from app.components.schemas.Error import Error
 from app.components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
-from app.components.schemas.ShopUnitStatisticResponse import ShopUnitStatisticResponse
+# from app.components.schemas.ShopUnitStatisticResponse import ShopUnitStatisticResponse
 
 db.create_all()
 
@@ -28,6 +28,4 @@ if OFFER is None:
     OFFER = ShopUnitType(type='OFFER')
     db.session.add(OFFER)
 db.session.commit()
-
-node = ShopUnit.query.filter_by(id="prob1").first()
-print(node)
+#

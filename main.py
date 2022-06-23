@@ -7,5 +7,6 @@ if __name__ == '__main__':
     from app.paths.delete import *
     from app.paths.node_id import *
     from app.paths.sales import *
+    from app.paths.statistic import *
     app.run(debug=True)
 

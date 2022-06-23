@@ -1,8 +1,8 @@
 from flask import jsonify
 from flask import Blueprint
-from app.db import db
-from app.components.schemas.ShopUnit import ShopUnit
-from app.my_logs.logg import info_log, warning_log
+from db import db
+from components.schemas.ShopUnit import ShopUnit
+from my_logs.logg import info_log, warning_log
 from .base_function import response_error_404, response_error_400, delete_child
 bp_delete = Blueprint('delete', __name__)
 

@@ -1,11 +1,13 @@
-from app.db import db
+from db import db
 from flask import Blueprint
-from app.components.schemas.ShopUnitType import ShopUnitType
+from components.schemas.ShopUnitType import ShopUnitType
+
 bp_consoly = Blueprint('commands', __name__)
 
 
 @bp_consoly.cli.command('create_db')
 def create_db():
+    print('Create Table')
     db.drop_all()
     db.create_all()
 

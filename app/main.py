@@ -1,15 +1,14 @@
 #!flask/bin/python
 import sys
 from flask_migrate import Migrate
-from app.db import create_app, db
-from app.paths.delete import bp_delete
-from app.paths.imports import bp_imports
-from app.paths.node_id import bp_node_id
-from app.paths.statistic import bp_statistic
-from app.paths.sales import bp_sales
-from app.consol import bp_consoly
-
-from app.components import bp_postgres
+from db import create_app, db
+from paths.delete import bp_delete
+from paths.imports import bp_imports
+from paths.node_id import bp_node_id
+from paths.statistic import bp_statistic
+from paths.sales import bp_sales
+from consol import bp_consoly
+from components import bp_postgres
 app = create_app()
 app.app_context().push()
 migrate = Migrate()
@@ -26,5 +25,8 @@ app.register_blueprint(bp_sales)
 app.register_blueprint(bp_consoly)
 
 sys.setrecursionlimit(999999)
+def run():
+    app.run(debug=True, host='0.0.0.0')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

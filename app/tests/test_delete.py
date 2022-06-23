@@ -1,5 +1,5 @@
 from base_functions import *
-from app.components.schemas.ShopUnit import ShopUnit
+from components.schemas.ShopUnit import ShopUnit
 
 def check_children(delete_id):
     children_del_node = ShopUnit.query.filter_by(parentId=delete_id).all()

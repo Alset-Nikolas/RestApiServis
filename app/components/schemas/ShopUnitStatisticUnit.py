@@ -1,4 +1,4 @@
-from app.db import db
+from db import db
 
 class ShopUnitStatisticUnit(db.Model):
     id = db.Column(db.String(), primary_key=True, nullable=False, autoincrement=False,)

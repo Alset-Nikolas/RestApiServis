@@ -1,10 +1,10 @@
 import datetime
-from app.my_logs.logg import info_log
+from my_logs.logg import info_log
 from flask import jsonify, request
-from app.components.schemas.ShopUnit import ShopUnit
-from app.components.schemas.ShopUnitType import ShopUnitType
+from components.schemas.ShopUnit import ShopUnit
+from components.schemas.ShopUnitType import ShopUnitType
 from sqlalchemy import func
-from app.paths.base_function import response_error_400
+from paths.base_function import response_error_400
 from .node_id import get_info
 from flask import Blueprint
 bp_sales = Blueprint('sales', __name__)

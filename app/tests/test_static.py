@@ -1,6 +1,6 @@
 import datetime
 from base_functions import *
-from app.components.schemas.ShopUnitStatisticUnit import  ShopUnitStatisticUnit
+from components.schemas.ShopUnitStatisticUnit import  ShopUnitStatisticUnit
 time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
 

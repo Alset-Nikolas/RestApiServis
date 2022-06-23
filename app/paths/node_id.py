@@ -1,7 +1,7 @@
 from flask import jsonify
-from app.components.schemas.ShopUnit import ShopUnit
+from components.schemas.ShopUnit import ShopUnit
 from .base_function import response_error_404
-from app.my_logs.logg import info_log, warning_log
+from my_logs.logg import info_log, warning_log
 from flask import Blueprint
 bp_node_id = Blueprint('node_id', __name__)
 

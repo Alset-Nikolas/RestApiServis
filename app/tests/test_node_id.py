@@ -1,5 +1,5 @@
 from base_functions import *
-from app.components.schemas.ShopUnit import ShopUnit
+from components.schemas.ShopUnit import ShopUnit
 
 
 def check_response_node(id_leaf):

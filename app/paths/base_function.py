@@ -1,9 +1,9 @@
 '''
     Набор функций, которые применяются в рамках hanlers
 '''
-from app.db import db
-from app.components.schemas.Error import Error
-from app.components.schemas.ShopUnit import ShopUnit
+from db import db
+from components.schemas.Error import Error
+from components.schemas.ShopUnit import ShopUnit
 from flask import jsonify
 
 

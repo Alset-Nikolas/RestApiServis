@@ -1,9 +1,9 @@
 import datetime
-from app.my_logs.logg import info_log
+from my_logs.logg import info_log
 from flask import jsonify, request
-from app.components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
+from components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
 from sqlalchemy import func
-from app.paths.base_function import response_error_404, response_error_400
+from paths.base_function import response_error_404, response_error_400
 from flask import Blueprint
 bp_statistic = Blueprint('statistic', __name__)
 

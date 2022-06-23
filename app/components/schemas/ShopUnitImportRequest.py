@@ -1,5 +1,3 @@
-print('ShopUnitImportRequest')
-
 from app import db
 
 class ShopUnitImportRequest(db.Model):

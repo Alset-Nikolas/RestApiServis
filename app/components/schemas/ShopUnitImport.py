@@ -1,4 +1,3 @@
-print('ShopUnitImport')
 from app import db
 
 

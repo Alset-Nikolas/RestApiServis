@@ -1,4 +1,3 @@
-print('Error')
 from app import db
 
 class Error(db.Model):

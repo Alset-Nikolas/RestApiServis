@@ -1,5 +1,3 @@
-print('app.scheas.2')
-
 from app import db
 
 class ShopUnitType(db.Model):

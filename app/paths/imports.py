@@ -1,4 +1,6 @@
 import datetime
+import logging
+
 from app import app, db, ShopUnitImport, ShopUnitImportRequest, ShopUnit, ShopUnitType, ShopUnitStatisticUnit
 from flask import request, jsonify
 from app.my_logs.logg import info_log, warning_log
@@ -60,7 +62,6 @@ def valid_item(item: dict) -> bool:
             f'POST:/imports Проблемы с отдельной структурой item (parent_id) :\nitem={item}\n, 404')
         return False
     if price is not None and price < 0:
-        print(price)
         info_log.warning(f'POST:/imports цена должна быть больше 0')
         warning_log.warning(
             f'POST:/imports Проблемы с отдельной структурой item (price) :\nitem={item}\n, 404')
@@ -108,7 +109,7 @@ def save_statistic(node_id: str, parentId: object, name: str, type_: str, price:
         new_node.price = price
         db.session.add(new_node)
     else:
-        print('поле updateDate монотонно возрастает по условию')
+        logging.info('поле updateDate монотонно возрастает по условию')
 
 def add_node(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
 
@@ -194,6 +195,7 @@ def imports():
     info_log.info('handler:POST:/imports ')
 
     if not request.is_json:
+        info_log.warning(f'handler:POST:/imports это не json')
         return response_error_400()
 
     data = request.get_json()
@@ -206,21 +208,17 @@ def imports():
     update_date = update_date.isoformat()
     ids = set()
     for item in data['items']:
-        print("not valid_structure_item(item) or not valid_item(item) or id_duplicate(ids, item['id'])",
-              not valid_structure_item(item),
-              not valid_item(item), id_duplicate(ids, item['id']))
-        if (not valid_structure_item(item)) or (not valid_item(item)) or (not id_duplicate(ids, item['id'])):
+        flags = [bool(not valid_structure_item(item)), bool(not valid_item(item)), bool(id_duplicate(ids, item['id']))]
+        if any(flags):
             return response_error_400()
         new_parent_id = value_or_none(dict_=item, key_='parentId')
         price = value_or_none(dict_=item, key_='price')
         node = ShopUnit.query.filter_by(id=item['id']).first()
         type_obj = ShopUnitType.query.filter_by(type=item['type']).first()
-        print(not check_type_context(type_obj.type, price))
         if not check_type_context(type_obj.type, price):
             return response_error_400()
         old_parent_id = None
         if node is not None:
-            print(node.name, update_date)
             old_parent_id = node.parentId
             update_node(
                 node_id=item['id'],
@@ -232,8 +230,6 @@ def imports():
                 old_parentId=old_parent_id,
             )
         else:
-            print('new', update_date, item['name'])
-
             add_node(
                 node_id=item['id'],
                 parentId=new_parent_id,

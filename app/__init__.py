@@ -1,7 +1,5 @@
 import datetime
-
-print('app.__init__')
-from flask import Flask
+from flask import Flask, Blueprint
 from app.components import create_app
 
 app = Flask(__name__)
@@ -13,19 +11,25 @@ from app.components.schemas.ShopUnitImport import ShopUnitImport
 from app.components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
 from app.components.schemas.Error import Error
 from app.components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
-# from app.components.schemas.ShopUnitStatisticResponse import ShopUnitStatisticResponse
 
-db.create_all()
+bp = Blueprint('commands', __name__)
 
 
-CATEGORY = ShopUnitType.query.filter_by(type='CATEGORY').first()
-OFFER = ShopUnitType.query.filter_by(type='OFFER').first()
+@bp.cli.command('create_db')
+def create_db():
+    db.drop_all()
+    db.create_all()
 
-if CATEGORY is None:
-    CATEGORY = ShopUnitType(type='CATEGORY')
-    db.session.add(CATEGORY)
-if OFFER is None:
-    OFFER = ShopUnitType(type='OFFER')
-    db.session.add(OFFER)
-db.session.commit()
-#
+    CATEGORY = ShopUnitType.query.filter_by(type='CATEGORY').first()
+    OFFER = ShopUnitType.query.filter_by(type='OFFER').first()
+
+    if CATEGORY is None:
+        CATEGORY = ShopUnitType(type='CATEGORY')
+        db.session.add(CATEGORY)
+
+    if OFFER is None:
+        OFFER = ShopUnitType(type='OFFER')
+        db.session.add(OFFER)
+
+    db.session.commit()
+

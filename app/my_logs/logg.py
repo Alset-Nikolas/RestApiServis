@@ -37,4 +37,3 @@ log_config = {
 logging.config.dictConfig(log_config)
 info_log = logging.getLogger('info_log')
 warning_log = logging.getLogger('warning_log')
-info_log.info('!!!!')

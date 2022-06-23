@@ -58,13 +58,21 @@ def statistic(id_):
                 return response_error_400()
 
     nodes = ShopUnitStatisticUnit.query.filter_by(id=id_)
+    flags = [False, False]
+    date_start, date_end = None, None
 
     if 'dateStart' in request.args:
+        flags[0] = True
         date_start = request.args['dateStart']
         nodes = nodes.filter(func.DATE(ShopUnitStatisticUnit.date) >= date_start)
     if 'dateEnd' in request.args:
+        flags[1] =True
         date_end = request.args['dateEnd']
         nodes = nodes.filter(func.DATE(ShopUnitStatisticUnit.date) < date_end)
+    if all(flags):
+        if date_start > date_end:
+            info_log.warning(f'/node/<id_>/statistic {data_i}={time} start_time <= end_time ')
+            return response_error_400()
     nodes = nodes.all()
 
     res = []

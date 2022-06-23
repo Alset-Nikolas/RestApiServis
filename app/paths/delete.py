@@ -43,6 +43,7 @@ def delete(id_):
      '''
 
     if not valid_id(id_):
+        info_log.warning(f'/delete/<id_> не валидный id={id_}, 400')
         return response_error_400()
 
     node_del = ShopUnit.query.filter_by(id=id_).first()

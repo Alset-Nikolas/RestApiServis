@@ -33,11 +33,11 @@
      |      | -- test_statistic.py  -> Тесты /node/<id_>/statistic 
      |      | -- unit_test.py -> Тесты (изначальные тесты)
      |      | -- __init__.py
+     |-- __init__.py
+     |-- main.py ->   файл запуска app
     migrations ->   Миграции
      |      
         ...   ->   файлы миграции
-     |      
-    main.py ->   файл запуска app
      |      
     openapi.yaml  -> Задание (1)
      |   

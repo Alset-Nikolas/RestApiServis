@@ -1,5 +1,5 @@
 from flask import jsonify
-from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
+from app import app, db,  ShopUnit
 from app.my_logs.logg import info_log, warning_log
 from .base_function import response_error_404, response_error_400, delete_child
 

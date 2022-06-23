@@ -250,7 +250,6 @@ def test_stats():
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     print("Test stats passed.")
 
-
 def test_delete():
     status, _ = request(f"/delete/{ROOT_ID}", method="DELETE")
     assert status == 200, f"Expected HTTP status code 200, got {status}"
@@ -265,7 +264,7 @@ def test_all(logger):
     test_import(logger)
     test_nodes()
     test_sales()
-    # test_stats()
+    test_stats()
     test_delete()
 
 
@@ -294,3 +293,4 @@ def main(logger):
 if __name__ == "__main__":
     logger = create_logging()
     main(logger)
+    # clear_bd(logger)

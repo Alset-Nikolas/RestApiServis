@@ -1,7 +1,7 @@
 import datetime
 from app.my_logs.logg import info_log, warning_log
 from flask import jsonify, request
-from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType
+from app import app,  ShopUnit, ShopUnitType
 from sqlalchemy import func
 from app.paths.base_function import response_error_404, response_error_400
 from .node_id import get_info
@@ -26,8 +26,10 @@ def filter_date(time):
 
 @app.route('/sales', methods=['GET'])
 def sales():
-    '''Получение списка **товаров**, цена которых была обновлена за последние 24 часа включительно [now() - 24h, now()] от
-        времени переданном в запросе.'''
+    '''
+        Получение списка **товаров**, цена которых была обновлена за последние 24 часа включительно [now() - 24h, now()] от
+            времени переданном в запросе.
+    '''
     info_log.info(f'handler:GET:/sales')
     if 'date' not in request.args:
         info_log.warning(f'/sales Нет параметра date. Аргументы={request.args}, 400')

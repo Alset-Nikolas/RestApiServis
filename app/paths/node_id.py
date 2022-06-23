@@ -1,7 +1,7 @@
 import json
 import copy
 from flask import jsonify
-from app import app, db, ShopUnit, Error, ShopUnit
+from app import app, ShopUnit
 from .base_function import response_error_404
 from app.my_logs.logg import info_log, warning_log
 
@@ -21,10 +21,11 @@ def get_info(ans, id_node: str) -> tuple:
     sum_price = 0
     offers = 0
     childs = node.children
-    if not childs:
+    if childs is None or len(childs) == 0:
         ans['children'] = None
         ans['price'] = node.price
-        return ans, ans['price'], offers
+        summa__ =node.price  if childs is None else 0
+        return ans,summa__, offers
 
     for child_id in childs:
         ans_i = dict()
@@ -35,6 +36,7 @@ def get_info(ans, id_node: str) -> tuple:
         child_type_obj = child.type
         if child_type_obj.type == 'OFFER':
             offers += 1
+
         sum_price += sum_i
         offers += offers_i
     if offers == 0:
@@ -46,7 +48,9 @@ def get_info(ans, id_node: str) -> tuple:
 
 @app.route('/nodes/<id_>', methods=['GET'])
 def nodes(id_):
-    '''Информация про обьект с id'''
+    '''
+        Обработчик по выводу информации по id
+    '''
     info_log.info(f'handler:GET:/nodes/<id_>')
     if ShopUnit.query.filter_by(id=id_).first() is not None:
         info_log.info(f'/nodes/<id_> Информация про обьект с id={id_}, 200')

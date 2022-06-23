@@ -1,5 +1,5 @@
 import datetime
-from app import app, db, ShopUnit, ShopUnitImport, ShopUnitImportRequest, Error, ShopUnit, ShopUnitType, ShopUnitStatisticUnit
+from app import app, db, ShopUnitImport, ShopUnitImportRequest, ShopUnit, ShopUnitType, ShopUnitStatisticUnit
 from flask import request, jsonify
 from app.my_logs.logg import info_log, warning_log
 from .base_function import delete_child, response_error_400, response_error_404
@@ -30,9 +30,10 @@ def is_category(node_id: object) -> bool:
     if node_id is None:
         return True
     node = ShopUnit.query.filter_by(id=node_id).first()
-    category_obj = node.type
-    return category_obj.type == 'CATEGORY'
-
+    if node is not None:
+        category_obj = node.type
+        return category_obj.type == 'CATEGORY'
+    return True
 
 def valid_structure_item(item: dict) -> bool:
     '''
@@ -56,7 +57,7 @@ def valid_item(item: dict) -> bool:
     if not is_category(parent_id):
         info_log.warning(f'POST:/imports родителем может быть только категория')
         warning_log.warning(
-            f'POST:/imports Проблемы с отдельной структурой item (price) :\nitem={item}\n, 404')
+            f'POST:/imports Проблемы с отдельной структурой item (parent_id) :\nitem={item}\n, 404')
         return False
     if price is not None and price < 0:
         print(price)
@@ -75,7 +76,7 @@ def value_or_none(dict_: dict, key_: str) -> object:
 
 def add_child(id_child: str, id_parent: object) -> None:
     parent = ShopUnit.query.filter_by(id=id_parent).first()
-    if parent:
+    if parent is not None:
         if parent.children is not None:
             parent.children = set(list(parent.children) + [id_child])
         else:
@@ -130,9 +131,10 @@ def update_parent(node_id: object, time_update: datetime) -> None:
     if node_id is None:
         return
     node = ShopUnit.query.filter_by(id=node_id).first()
-    node.date = time_update
-    db.session.add(node)
-    update_parent(node_id=node.parentId, time_update=time_update)
+    if node is not None:
+        node.date = time_update
+        db.session.add(node)
+        update_parent(node_id=node.parentId, time_update=time_update)
 
 
 def save_import_fact(node_id: str, name: str, parentId: object, type: str, price: object) -> None:
@@ -186,7 +188,9 @@ def id_duplicate(ids: set, new_id: str) -> bool:
 
 @app.route('/imports', methods=['POST'])
 def imports():
-    '''Импортирует новые товары и/или категории.'''
+    '''
+        Обработчик для импортирования новых товаров и/или категорий.
+    '''
     info_log.info('handler:POST:/imports ')
 
     if not request.is_json:

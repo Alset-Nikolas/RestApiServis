@@ -36,8 +36,6 @@ services:
     build: ./nginx
     ports:
       - 80:80
-    volumes:
-      - ./static:/home/web/default/static
     depends_on:
       - app
       - pgadmin

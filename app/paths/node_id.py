@@ -10,9 +10,9 @@ bp_node_id = Blueprint('node_id', __name__)
 def get_info(ans, id_node: str) -> tuple:
     '''Вернуть ниформацию о узле и его детей'''
     node = ShopUnit.query.filter_by(id=id_node).first()
-    type_obj = node.type
+    type = node.type
 
-    ans["type"] = type_obj.type
+    ans["type"] = type
     ans["name"] = node.name
     ans["id"] = node.id
     ans["parentId"] = node.parentId
@@ -33,8 +33,8 @@ def get_info(ans, id_node: str) -> tuple:
         # ans['children'].append(copy.deepcopy(ans_i))
         ans['children'].append(ans_i)
         child = ShopUnit.query.filter_by(id=child_id).first()
-        child_type_obj = child.type
-        if child_type_obj.type == 'OFFER':
+        child_type = child.type
+        if child_type == 'OFFER':
             offers += 1
 
         sum_price += sum_i

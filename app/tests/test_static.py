@@ -1,14 +1,17 @@
 import datetime
+import random
+
 from base_functions import *
-from components.schemas.ShopUnitStatisticUnit import  ShopUnitStatisticUnit
+from components.schemas.ShopUnitStatistic import ShopUnitStatistic
+
 time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
 
 def clear_history():
-    for node in ShopUnitStatisticUnit.query.all():
+    for node in ShopUnitStatistic.query.all():
         db.session.delete(node)
     db.session.commit()
-    assert len(ShopUnitStatisticUnit.query.all()) == 0
+    assert len(ShopUnitStatistic.query.all()) == 0
 
 
 def import_history(data_first="2022-02-01T12:00:00.000Z", days=10):
@@ -45,15 +48,35 @@ def import_history(data_first="2022-02-01T12:00:00.000Z", days=10):
         assert status == 200, f"Expected HTTP status code 200, got {status}"
 
 
-def test_stats(id, start_t, end_t):
-    params = urllib.parse.urlencode({
-        "dateStart": start_t,
-        "dateEnd": end_t
-    })
+def import_tree(tree):
+    for tree_i in tree:
+        status, x = request("/imports", method="POST", data=tree_i)
+        assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+
+def test_stats(id, start_t=None, end_t=None):
+    params_dict = dict()
+    flags = [0, 0]
+    if start_t:
+        params_dict['dateStart'] = start_t
+        flags[0] = True
+    if end_t:
+        params_dict['dateEnd'] = end_t
+        flags[1] = True
+    params = urllib.parse.urlencode(params_dict)
     status, response = request(
         f"/node/{id}/statistic?{params}", json_response=True)
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
+    for item in response:
+        date_item = item['date']
+        if flags[0]:
+            assert date_format(params_dict['dateStart']) <= date_format(
+                date_item), f'time={date_format(date_item)} t=>{date_format(params_dict["dateStart"])}'
+        if flags[1]:
+            assert date_format(date_item) < date_format(
+                params_dict['dateEnd']), f'time={date_format(date_item)} t<{date_format(params_dict["dateEnd"])} )'
+
     return response
 
 
@@ -61,27 +84,30 @@ def date_format(date_str):
     return datetime.datetime.strptime(date_str, time_format)
 
 
-def check_valid_date():
-    data_first = '2022-02-01T12:00:00.000Z'
-    days = 20
-    clear_history()
-    import_history(data_first, days)
-    startDate = "2022-01-03T00:00:00.000Z"
-    endDate = "2022-02-03T00:00:00.000Z"
-    items = test_stats(id='d515e43f-f3f6-4471-bb77-6b455017a2d2', start_t=startDate, end_t=endDate)
-    for item in items:
-        date_item = item['date']
-        assert date_format(startDate) <= date_format(date_item) < date_format(endDate), f'time={date_format(date_item)} t=[{date_format(startDate)}; {date_format(endDate)} )'
 
-    clear_history()
-    import_history(data_first, days)
-    items = test_stats(id='d515e43f-f3f6-4471-bb77-6b455017a2d2', start_t=endDate, end_t=endDate)
-    assert items == [], f'startDate==endDate'
+def test_valid_date():
+    for x in range(10):
+        # clear_history()
+        # tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
+        #
+        # import_tree(tree)
 
+        date_first = date_first + datetime.timedelta(days=random.randint(-5, 5))
+        date_end = date_end + datetime.timedelta(days=random.randint(-5, 5))
+        while date_first > date_end:
+            date_first = date_first + datetime.timedelta(days=random.randint(-5, 5))
+            date_end = date_end + datetime.timedelta(days=random.randint(-5, 5))
 
+        start_day = str(date_first.strftime(time_format))[:-8] + 'Z'
+        date_end = str(date_end.strftime(time_format))[:-8] + 'Z'
+
+        for id_offer in range(-1, last_id_offer, -1):
+            test_stats(id=str(id_offer) + '-10000', start_t=start_day, end_t=date_end)
 
 if __name__ == '__main__':
     logger = create_logging()
-    clear_history()
-    import_history()
-    check_valid_date()
+    # clear_history()
+    # import_history()
+    test_valid_date()
+
+

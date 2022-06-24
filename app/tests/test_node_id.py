@@ -22,7 +22,7 @@ def check_response_node(id_leaf):
         while children != []:
             for child_id in children:
                 child = ShopUnit.query.filter_by(id=child_id).first()
-                if child.type.type=='OFFER':
+                if child.type=='OFFER':
                     q_offer+=1
                     sum_ += child.price
                 else:

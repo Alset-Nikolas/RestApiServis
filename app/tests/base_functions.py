@@ -1,4 +1,6 @@
+import datetime
 import json
+import random
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -86,9 +88,6 @@ IMPORT_BATCHES = [
 ]
 
 
-
-
-
 def request(path, method="GET", data=None, json_response=False):
     try:
         params = {
@@ -124,6 +123,8 @@ def create_logging():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     return logger
+
+
 #
 # def check_bd(logger):
 #     '''Проверка значений в таблице NodeTree'''
@@ -161,6 +162,7 @@ def test_import(logger):
     logger.info(f'test import passed.')
     # check_bd(logger)
 
+
 def add_new_category(logger):
     id_tv_category = '1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2'
     id_leaf = '21312312314123123123ZZZZZ'
@@ -186,3 +188,43 @@ def add_new_category(logger):
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info('Добавали новую категорию Plasma tv')
     return id_leaf
+
+
+def create_random_tree():
+
+    time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
+    tree = []
+    last_id_category = 1
+    last_id_offer = -1
+    date = "2022-02-01T12:00:00.000Z"
+    date_first = datetime.datetime.strptime(date, time_format)
+    date_i = date_first
+    for days_number in range(10):
+        last_id_category = 1
+        last_id_offer = -1
+        for q_items in range(random.randint(5, 15)):
+            tree_i = dict()
+            tree_i['items'] = []
+            for q_item in range(random.randint(5, 15)):
+                type = random.randint(1, 2)
+                if last_id_category == 1:
+                    random_parent = None
+                else:
+                    random_parent = random.randint(1, last_id_category-1)
+                tree_i['items'].append({
+                    "type": "CATEGORY" if type == 1 else 'OFFER',
+                    "name": f"{last_id_category}_{last_id_offer}",
+                    "id": f"{str(last_id_category)}-10000" if type==1 else f"{str(last_id_offer)}-10000" ,
+                    "parentId": f"{random_parent}-10000" if random.randint(1,10) < 7 else None
+                })
+                if type == 1:
+                    last_id_category +=1
+                else:
+                    last_id_offer -= 1
+                    tree_i['items'][-1]['price'] = random.randint(1000, 5000)
+            tree.append(tree_i)
+            date_i = datetime.datetime.strptime(date, time_format) + datetime.timedelta(days=days_number)
+            tree_i['updateDate'] = str(date_i.strftime(time_format))[:-8] + 'Z'
+    date_end = date_i
+    return tree, last_id_category, last_id_offer, date_first, date_end
+

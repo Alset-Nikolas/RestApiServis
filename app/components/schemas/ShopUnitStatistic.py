@@ -1,12 +1,13 @@
 from db import db
 
-class ShopUnitStatisticUnit(db.Model):
+class ShopUnitStatistic(db.Model):
     id = db.Column(db.String(), primary_key=True, nullable=False, autoincrement=False,)
     date = db.Column(db.DateTime, primary_key=True)
     name = db.Column(db.String(), nullable=False)
     parentId = db.Column(db.String(), nullable=True)
-    type_id = db.Column(db.String(), db.ForeignKey('shop_unit_type.type'), nullable=False)
-    type = db.relationship('ShopUnitType', backref=db.backref('units_stat', lazy=True))
+    type = db.Column(db.String(), db.ForeignKey('shop_unit_type.type'), nullable=False)
+    # type = db.relationship('ShopUnitType', backref=db.backref('units_stat', lazy=True))
+
     price = db.Column(db.Integer, nullable=True)
 
     __table_args__ = (

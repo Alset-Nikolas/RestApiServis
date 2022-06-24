@@ -20,7 +20,7 @@ def time_valid(time, time_format):
 def filter_date(time):
     nodes = ShopUnit.query.filter(func.DATE(ShopUnit.date) <= time)
     nodes = nodes.filter(func.DATE(ShopUnit.date) >= time - datetime.timedelta(hours=24))
-    nodes = nodes.filter_by(type=ShopUnitType.query.filter_by(type='OFFER').first())
+    nodes = nodes.filter_by(type='OFFER')
 
     info_log.info(f'/sales time={time} после фильтра {[(x.name, x.date) for x in nodes]}')
     return [get_info({}, node.id)  for node in nodes]

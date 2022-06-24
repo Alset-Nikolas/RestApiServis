@@ -201,7 +201,7 @@ def test_valid_date(id_node, add_days):
         update_node = {
             "items": [
                 {
-                    "type": node.type.type,
+                    "type": node.type,
                     "name": node.name,
                     "id": node.id,
                     "parentId": node.parentId,
@@ -237,7 +237,7 @@ def test_price(id_node, add_price):
         update_node = {
             "items": [
                 {
-                    "type": node.type.type,
+                    "type": node.type,
                     "name": node.name,
                     "id": id_node,
                     "parentId": node.parentId,
@@ -247,7 +247,7 @@ def test_price(id_node, add_price):
             "updateDate": str(node.date.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3] + 'Z')
         }
         status, x = request("/imports", method="POST", data=update_node)
-        if node.type.type == 'OFFER':
+        if node.type == 'OFFER':
             assert status == 200, f"Expected HTTP status code 200, got {status}"
         else:
             assert status == 400, f"Expected HTTP status code 400, got {status}"
@@ -265,7 +265,7 @@ def test_price(id_node, add_price):
     old_price = remember_old_price()
     update_price()
     node = ShopUnit.query.filter_by(id=id_node).first()
-    if node.type.type == 'OFFER':
+    if node.type == 'OFFER':
         assert node.price == old_price[
             id_node] + add_price, f"Expected price {node.price}, got {old_price[id_node] + add_price}, id={id_node}"
 
@@ -280,7 +280,7 @@ def update_parent(node_id, new_parent_id):
     update_node = {
         "items": [
             {
-                "type": node.type.type,
+                "type": node.type,
                 "name": node.name,
                 "id": node_id,
                 "parentId": new_parent_id,
@@ -345,9 +345,9 @@ def test_all(logger):
     test_valid_name_str(logger)
     test_no_valid_child(logger)
     test_valid_child(logger)
-
     test_valid_update_parent(logger)
 
 if __name__ == "__main__":
     logger = create_logging()
     test_all(logger)
+    # test_import(logger)

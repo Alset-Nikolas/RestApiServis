@@ -6,8 +6,8 @@ class ShopUnit(db.Model):
     name = db.Column(db.String(), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     parentId = db.Column(db.String(), nullable=True)
-    type_id = db.Column(db.String(), db.ForeignKey('shop_unit_type.type'), nullable=False)
-    type = db.relationship('ShopUnitType', backref=db.backref('units', lazy=True))
+    type = db.Column(db.String(), db.ForeignKey('shop_unit_type.type'), nullable=False)
+    # type = db.relationship('ShopUnitType', backref=db.backref('units', lazy=True))
     price = db.Column(db.Integer, nullable=True)
     children = db.Column(db.ARRAY(db.String(), db.ForeignKey('shop_unit.id')), nullable=True)
 

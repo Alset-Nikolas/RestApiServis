@@ -4,7 +4,7 @@ from db import db
 from components.schemas.ShopUnitImport import ShopUnitImport
 from components.schemas.ShopUnit import ShopUnit
 from components.schemas.ShopUnitType import ShopUnitType
-from components.schemas.ShopUnitStatisticUnit import ShopUnitStatisticUnit
+from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 from components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
 from flask import request
 from my_logs.logg import info_log, warning_log
@@ -39,8 +39,8 @@ def is_category(node_id: object) -> bool:
         return True
     node = ShopUnit.query.filter_by(id=node_id).first()
     if node is not None:
-        category_obj = node.type
-        return category_obj.type == 'CATEGORY'
+        category = node.type
+        return category == 'CATEGORY'
     return True
 
 def valid_structure_item(item: dict) -> bool:
@@ -108,9 +108,9 @@ def check_type_context(type: str, price: object) -> bool:
     return True
 
 def save_statistic(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
-    problem = ShopUnitStatisticUnit.query.filter_by(id=node_id).filter_by(date=time_).first()
+    problem = ShopUnitStatistic.query.filter_by(id=node_id).filter_by(date=time_).first()
     if problem is None:
-        new_node = ShopUnitStatisticUnit(id=node_id, name=name, date=time_, type=type_)
+        new_node = ShopUnitStatistic(id=node_id, name=name, date=time_, type=type_)
         new_node.parentId = parentId
         new_node.price = price
         db.session.add(new_node)
@@ -118,7 +118,6 @@ def save_statistic(node_id: str, parentId: object, name: str, type_: str, price:
         logging.info('поле updateDate монотонно возрастает по условию')
 
 def add_node(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
-
     new_node = ShopUnit(id=node_id, name=name, date=time_, type=type_)
     new_node.parentId = parentId
     add_child(id_child=node_id, id_parent=parentId)
@@ -126,6 +125,7 @@ def add_node(node_id: str, parentId: object, name: str, type_: str, price: objec
     db.session.add(new_node)
 
     save_import_fact(node_id, name, parentId, type_, price)
+
     info_log.info(f'POST:/imports Новый обьект id={node_id}, 200')
 
     save_statistic(node_id, parentId, name, type_, price, time_)
@@ -199,7 +199,6 @@ def imports():
         Обработчик для импортирования новых товаров и/или категорий.
     '''
     info_log.info('handler:POST:/imports ')
-
     if not request.is_json:
         info_log.warning(f'handler:POST:/imports это не json')
         return response_error_400()
@@ -221,6 +220,7 @@ def imports():
         price = value_or_none(dict_=item, key_='price')
         node = ShopUnit.query.filter_by(id=item['id']).first()
         type_obj = ShopUnitType.query.filter_by(type=item['type']).first()
+        type = type_obj.type
         if not check_type_context(type_obj.type, price):
             return response_error_400()
         old_parent_id = None
@@ -230,7 +230,7 @@ def imports():
                 node_id=item['id'],
                 parentId=new_parent_id,
                 name=item['name'],
-                type_=type_obj,
+                type_=type,
                 price=price,
                 time_=update_date,
                 old_parentId=old_parent_id,
@@ -240,7 +240,7 @@ def imports():
                 node_id=item['id'],
                 parentId=new_parent_id,
                 name=item['name'],
-                type_=type_obj,
+                type_=type,
                 price=price,
                 time_=update_date
             )
@@ -249,8 +249,8 @@ def imports():
             update_parent(new_parent_id, time_update=update_date)
         # if old_parent_id is not None:
         #     update_parent(old_parent_id, time_update=update_date)
-
-    save_request_fact(ids, update_date)
+    print('!!')
+    # save_request_fact(ids, update_date)
 
     db.session.commit()
     return '', 200

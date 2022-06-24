@@ -347,3 +347,5 @@ if __name__ == "__main__":
     logger = create_logging()
     test_all(logger)
     # test_import(logger)
+    # todo проверить у 2 родителя меняются ли даты
+

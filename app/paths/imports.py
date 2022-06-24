@@ -213,6 +213,7 @@ def imports():
 
     update_date = datetime.datetime.strptime(data['updateDate'], time_format)
     update_date = update_date.isoformat()
+
     ids = set()
     for item in data['items']:
         flags = [bool(not valid_structure_item(item)), bool(not valid_item(item)), bool(id_duplicate(ids, item['id']))]
@@ -223,6 +224,7 @@ def imports():
         node = ShopUnit.query.filter_by(id=item['id']).first()
         type_obj = ShopUnitType.query.filter_by(type=item['type']).first()
         type = type_obj.type
+        #todo Проверка на изменение типа!!
         if not check_type_context(type_obj.type, price):
             return response_error_400()
         old_parent_id = None
@@ -249,8 +251,8 @@ def imports():
 
         if new_parent_id is not None:
             update_parent(new_parent_id, time_update=update_date)
-        # if old_parent_id is not None:
-        #     update_parent(old_parent_id, time_update=update_date)
+        if old_parent_id is not None:
+            update_parent(old_parent_id, time_update=update_date)
     # save_request_fact(ids, update_date)
 
     db.session.commit()

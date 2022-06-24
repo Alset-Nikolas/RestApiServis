@@ -1,5 +1,17 @@
-# RestApiServis
-Пояснение к структуре:
+# RestApiServis - Задание от Яндекс Школа бэкенд-разработки 2022г
+
+# Для запуска
+1. Заходим на сервер или локальную машину
+2. Клонируем репозиторий https://github.com/Alset-Nikolas/RestApiServis
+3. Затем нужно забилдить и поднять контейнер с помощью Docker Compose в этом помогут команды ниже
+   - sudo docker-compose -f docker-compose.dev.yml build # Билд
+   - sudo docker-compose -f docker-compose.dev.yml up # Запуск
+   - sudo docker-compose -f docker-compose.dev.yml up -d # Запуск в фоне
+   - sudo docker-compose -f docker-compose.dev.yml stop # Остановка
+4. Нужно создать таблицы бд
+   - sudo docker exec flask_azz_yt flask  commands create_db
+
+# Пояснение к структуре проекта:
 
     app ->   Python-пакет с проектом
      |-- components   (БД)
@@ -12,7 +24,7 @@
      |      |       | -- ShopUnitStatisticResponse.py -> схема ShopUnitStatisticResponse
      |      |       | -- ShopUnitStatisticUnit.py -> схема ShopUnitStatisticUnit
      |      |       | -- ShopUnitType.py -> схема ShopUnitType
-     |      | -- __init__ -> Суть: заполнить app.config
+     |      | -- __init__ 
      |-- my_logs  (Логирование)
      |      | -- logg.py -> Кофигурация логера
      |      | -- __init__.py
@@ -33,16 +45,21 @@
      |      | -- test_statistic.py  -> Тесты /node/<id_>/statistic 
      |      | -- unit_test.py -> Тесты (изначальные тесты)
      |      | -- __init__.py
-     |-- __init__.py
-     |-- main.py ->   файл запуска app
+     | -- config.py ->   файл кофигурации
+     | -- consol.py ->   файл запуска create_bd в консоли
+     | -- db.py ->   вынесено в отдельный файл для декомпозиции моделей
+     | -- Dockerfile ->   Dockerfile
+     | -- main.py ->   файл запуска app
+     | -- main.py ->   requirements.txt -> файл зависимостей
     migrations ->   Миграции
      |      
         ...   ->   файлы миграции
      |      
-    openapi.yaml  -> Задание (1)
+    Task -> Папка Заданий
+     |      
+        ...   ->   файлы заданий
+     |   
+    docker-compose.yaml  -> docker-compose
      |   
     README.md -> Этот файл :)
-     |
-    requirements.txt -> файл зависимостей
-     |
-    Task.md -> Задание (2)
+

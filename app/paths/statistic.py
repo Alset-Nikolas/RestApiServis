@@ -7,6 +7,7 @@ from paths.base_function import response_error_404, response_error_400
 from flask import Blueprint
 from sqlalchemy import desc
 bp_statistic = Blueprint('statistic', __name__)
+time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
 def time_valid(time, time_format):
     try:
@@ -16,23 +17,38 @@ def time_valid(time, time_format):
         return False
 
 
-def calc_price(id, t):
-    children = ShopUnitStatistic.query.filter(func.DATE(ShopUnitStatistic.date) < t).filter_by(parentId=id)
+def calc_price(ans, id, t):
+    node =  ShopUnitStatistic.query.filter_by(id=id).filter_by(date=t).first()
+    ans['date'] = str(node.date.strftime(time_format))[:-8] + 'Z'
+    ans['type'] = node.type
+    ans['name'] = node.name
+    ans['id'] = id
+    ans['parentId'] = node.parentId
+    ans['children'] = []
+
+    children = ShopUnitStatistic.query.filter(func.DATE(ShopUnitStatistic.date) < t)
+    children = children.filter_by(parentId=id)
     children_id = {x.id for x in children.all()}
     offers = 0
     summa_ = 0
-
     for ch_id in children_id:
         children = children.filter_by(id=ch_id)
         ch_last = children.order_by(desc(ShopUnitStatistic.date)).first()
         if ch_last is not None:
-            ch_obj = ShopUnitStatistic.query.filter_by(id=ch_last.id).filter_by(date=ch_last.date).first()
-            if ch_obj.type == 'OFFER':
-                offers += 1
-                summa_ += ch_obj.price
-            else:
-                summa_i, offers = calc_price(id=ch_obj.id, t=t)
-    return summa_, offers
+            ans_ch, summa_i, offers_i = calc_price(ans={}, id=ch_last.id, t=ch_last.date)
+            ans['children'].append(ans_ch)
+            summa_ += summa_i
+            offers += offers_i
+    if node.type == 'OFFER':
+        offers += 1
+        summa_ += node.price
+
+    if offers == 0 :
+        ans['price'] = None
+    else:
+        ans['price'] = summa_ // offers
+    # input()
+    return ans, summa_, offers
 
 
 # def save_static_response(info: list):
@@ -63,7 +79,6 @@ def statistic(id_):
                 return response_error_400()
 
     nodes = ShopUnitStatistic.query.filter_by(id=id_)
-    print(nodes)
     flags = [False, False]
     date_start, date_end = None, None
     if 'dateStart' in request.args:
@@ -79,32 +94,12 @@ def statistic(id_):
             info_log.warning(f'/node/<id_>/statistic start_time <= end_time  {date_start} <=! {date_end}')
             return response_error_400()
     nodes = nodes.all()
-    print(len(nodes), nodes)
     res = []
     save_info_to_static_response = []
     for node_t in nodes:
         t = node_t.date
-        type_t = node_t.type
-        price_t = node_t.price
-        ans_i = {
-            'date': str(t.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3] + 'Z'),
-            'type': type_t,
-            'name': node_t.name,
-            'id': node_t.id,
-            'parentId': node_t.parentId,
-        }
         save_info_to_static_response.append([node_t.id,  t])
-
-        if type_t == 'OFFER':
-            ans_i['price'] = price_t
-            ans_i['children'] = None
-        else:
-            summa_, offers = calc_price(id_, t)
-            if offers == 0:
-                ans_i['price'] = None
-            else:
-                ans_i['price'] = summa_ // offers
+        ans_i, summa_, offers = calc_price({}, id_, t)
         res.append(ans_i)
-        print(len(res), res)
     # save_static_response(save_info_to_static_response)
     return jsonify(res), 200

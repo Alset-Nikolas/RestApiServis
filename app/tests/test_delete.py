@@ -1,5 +1,7 @@
 from base_functions import *
+from components import ShopUnitStatistic
 from components.schemas.ShopUnit import ShopUnit
+
 
 def check_children(delete_id):
     children_del_node = ShopUnit.query.filter_by(parentId=delete_id).all()
@@ -8,14 +10,18 @@ def check_children(delete_id):
         status, _ = request(f"/nodes/{id_child}", json_response=True)
         assert status == 404, f"Expected HTTP status code 404, got {status}"
 
+    nodes_stat = ShopUnitStatistic.query.filter_by(parentId=delete_id).all()
+    assert nodes_stat == [], f'Записи в таблице ShopUnitStatistic еще есть: {nodes_stat}'
+
+
 def check_parent(id_node, parent_info_before_del):
     if parent_info_before_del is None:
         return
     parent = ShopUnit.query.filter_by(id=parent_info_before_del['id']).first()
     cop = parent_info_before_del['children'].copy()
     cop.pop(cop.index(id_node))
-    assert sorted(parent.children) == sorted(cop), f'После удаления OFFER ожидалось {sorted(cop)}, получили {sorted(parent.children)} ,Параметры родителя: name={parent.name}, id={parent.id}'
-
+    assert sorted(parent.children) == sorted(
+        cop), f'После удаления OFFER ожидалось {sorted(cop)}, получили {sorted(parent.children)} ,Параметры родителя: name={parent.name}, id={parent.id}'
 
 
 
@@ -37,6 +43,10 @@ def delete_node(delete_id):
 
     status, _ = request(f"/nodes/{delete_id}", json_response=True)
     assert status == 404, f"Expected HTTP status code 404, got {status}"
+
+    nodes_stat = ShopUnitStatistic.query.filter_by(id=delete_id).all()
+    assert nodes_stat == [], f'Записи в таблице ShopUnitStatistic еще есть: {nodes_stat}'
+
 
     return parent_info_before_del
 
@@ -65,7 +75,6 @@ def test_no_valid_delete(logger):
     assert status == 404, f"Expected HTTP status code 404, got {status}"
 
 
-
 def test_all(logger):
     clear_bd(logger)
     test_import(logger)
@@ -79,8 +88,7 @@ def test_all(logger):
     test_no_valid_delete(logger)
     logger.info('check_delete: test_no_valid_delete')
 
+
 if __name__ == "__main__":
     logger = create_logging()
     test_all(logger)
-
-

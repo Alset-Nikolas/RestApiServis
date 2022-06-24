@@ -23,3 +23,10 @@ def create_db():
         db.session.add(OFFER)
 
     db.session.commit()
+
+
+@bp_consoly.cli.command('go_test')
+def go_test():
+    print('GO TEST')
+    from tests import test_run
+    test_run()

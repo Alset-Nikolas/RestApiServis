@@ -69,7 +69,7 @@ def test_stats(id, start_t=None, end_t=None):
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     for item in response:
-        date_item = item['date']
+        date_item = str(item['date'])[:-1]+'0.000000+0000'
         if flags[0]:
             assert date_format(params_dict['dateStart']) <= date_format(
                 date_item), f'time={date_format(date_item)} t=>{date_format(params_dict["dateStart"])}'
@@ -85,12 +85,13 @@ def date_format(date_str):
 
 
 
-def test_valid_date():
-    for x in range(10):
-        # clear_history()
-        # tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
-        #
-        # import_tree(tree)
+def test_valid_date(logger, n=1):
+    logger.info('stat test_valid_date: start')
+    for x in range(n):
+        clear_history()
+        tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
+
+        import_tree(tree)
 
         date_first = date_first + datetime.timedelta(days=random.randint(-5, 5))
         date_end = date_end + datetime.timedelta(days=random.randint(-5, 5))
@@ -98,16 +99,14 @@ def test_valid_date():
             date_first = date_first + datetime.timedelta(days=random.randint(-5, 5))
             date_end = date_end + datetime.timedelta(days=random.randint(-5, 5))
 
-        start_day = str(date_first.strftime(time_format))[:-8] + 'Z'
-        date_end = str(date_end.strftime(time_format))[:-8] + 'Z'
+        start_day = date_first.strftime(time_format)
+        date_end = date_end.strftime(time_format)
 
         for id_offer in range(-1, last_id_offer, -1):
             test_stats(id=str(id_offer) + '-10000', start_t=start_day, end_t=date_end)
-
+    logger.info('stat test_valid_date: passed')
 if __name__ == '__main__':
     logger = create_logging()
-    # clear_history()
-    # import_history()
-    test_valid_date()
+    test_valid_date(logger)
 
 

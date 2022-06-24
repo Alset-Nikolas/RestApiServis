@@ -249,7 +249,6 @@ def imports():
             update_parent(new_parent_id, time_update=update_date)
         # if old_parent_id is not None:
         #     update_parent(old_parent_id, time_update=update_date)
-    print('!!')
     # save_request_fact(ids, update_date)
 
     db.session.commit()

@@ -7,7 +7,6 @@ class ShopUnit(db.Model):
     date = db.Column(db.DateTime, nullable=False)
     parentId = db.Column(db.String(), nullable=True)
     type = db.Column(db.String(), db.ForeignKey('shop_unit_type.type'), nullable=False)
-    # type = db.relationship('ShopUnitType', backref=db.backref('units', lazy=True))
     price = db.Column(db.Integer, nullable=True)
     children = db.Column(db.ARRAY(db.String(), db.ForeignKey('shop_unit.id')), nullable=True)
 
@@ -16,7 +15,6 @@ class ShopUnit(db.Model):
         self.name = name
         self.date = date
         self.type = type
-
 
     def __repr__(self):
         return f'id={self.id}; name={self.name}; date={self.date}; type={self.type}'

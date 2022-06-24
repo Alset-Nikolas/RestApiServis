@@ -24,7 +24,6 @@ def check_parent(id_node, parent_info_before_del):
         cop), f'После удаления OFFER ожидалось {sorted(cop)}, получили {sorted(parent.children)} ,Параметры родителя: name={parent.name}, id={parent.id}'
 
 
-
 def delete_node(delete_id):
     del_node = ShopUnit.query.filter_by(id=delete_id).first()
     parent_id = del_node.parentId
@@ -46,7 +45,6 @@ def delete_node(delete_id):
 
     nodes_stat = ShopUnitStatistic.query.filter_by(id=delete_id).all()
     assert nodes_stat == [], f'Записи в таблице ShopUnitStatistic еще есть: {nodes_stat}'
-
 
     return parent_info_before_del
 

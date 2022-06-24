@@ -6,8 +6,10 @@ from sqlalchemy import func
 from paths.base_function import response_error_404, response_error_400
 from flask import Blueprint
 from sqlalchemy import desc
+
 bp_statistic = Blueprint('statistic', __name__)
 time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
+
 
 def time_valid(time, time_format):
     try:
@@ -18,7 +20,7 @@ def time_valid(time, time_format):
 
 
 def calc_price(ans, id, t):
-    node =  ShopUnitStatistic.query.filter_by(id=id).filter_by(date=t).first()
+    node = ShopUnitStatistic.query.filter_by(id=id).filter_by(date=t).first()
     ans['date'] = str(node.date.strftime(time_format))[:-8] + 'Z'
     ans['type'] = node.type
     ans['name'] = node.name
@@ -43,7 +45,7 @@ def calc_price(ans, id, t):
         offers += 1
         summa_ += node.price
 
-    if offers == 0 :
+    if offers == 0:
         ans['price'] = None
     else:
         ans['price'] = summa_ // offers
@@ -86,7 +88,7 @@ def statistic(id_):
         date_start = request.args['dateStart']
         nodes = nodes.filter(func.DATE(ShopUnitStatistic.date) >= date_start)
     if 'dateEnd' in request.args:
-        flags[1] =True
+        flags[1] = True
         date_end = request.args['dateEnd']
         nodes = nodes.filter(func.DATE(ShopUnitStatistic.date) < date_end)
     if all(flags):
@@ -98,7 +100,7 @@ def statistic(id_):
     save_info_to_static_response = []
     for node_t in nodes:
         t = node_t.date
-        save_info_to_static_response.append([node_t.id,  t])
+        save_info_to_static_response.append([node_t.id, t])
         ans_i, summa_, offers = calc_price({}, id_, t)
         res.append(ans_i)
     # save_static_response(save_info_to_static_response)

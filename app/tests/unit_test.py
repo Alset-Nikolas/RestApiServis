@@ -8,6 +8,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from base_functions import create_logging, test_import, clear_bd
+
 API_BASEURL = "http://localhost:5000"
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -211,9 +212,6 @@ def print_diff(expected, response):
                     "expected.json", "response.json"])
 
 
-
-
-
 def test_nodes():
     status, response = request(f"/nodes/{ROOT_ID}", json_response=True)
     print(status)
@@ -249,6 +247,7 @@ def test_stats():
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     print("Test stats passed.")
+
 
 def test_delete():
     status, _ = request(f"/delete/{ROOT_ID}", method="DELETE")

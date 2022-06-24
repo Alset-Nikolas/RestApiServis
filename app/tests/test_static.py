@@ -69,7 +69,7 @@ def test_stats(id, start_t=None, end_t=None):
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     for item in response:
-        date_item = str(item['date'])[:-1]+'0.000000+0000'
+        date_item = str(item['date'])[:-1] + '0.000000+0000'
         if flags[0]:
             assert date_format(params_dict['dateStart']) <= date_format(
                 date_item), f'time={date_format(date_item)} t=>{date_format(params_dict["dateStart"])}'
@@ -82,7 +82,6 @@ def test_stats(id, start_t=None, end_t=None):
 
 def date_format(date_str):
     return datetime.datetime.strptime(date_str, time_format)
-
 
 
 def test_valid_date(logger, n=1):
@@ -105,8 +104,8 @@ def test_valid_date(logger, n=1):
         for id_offer in range(-1, last_id_offer, -1):
             test_stats(id=str(id_offer) + '-10000', start_t=start_day, end_t=date_end)
     logger.info('stat test_valid_date: passed')
+
+
 if __name__ == '__main__':
     logger = create_logging()
     test_valid_date(logger)
-
-

@@ -5,7 +5,9 @@ from components.schemas.ShopUnit import ShopUnit
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 from my_logs.logg import info_log, warning_log
 from .base_function import response_error_404, response_error_400, delete_child
+
 bp_delete = Blueprint('delete', __name__)
+
 
 def delete_one_node(node_id: int) -> None:
     '''
@@ -17,7 +19,6 @@ def delete_one_node(node_id: int) -> None:
 
     for node_stat in ShopUnitStatistic.query.filter_by(id=node_id).all():
         db.session.delete(node_stat)
-
 
 
 def recursively_delete_nodes(node_id: int) -> None:

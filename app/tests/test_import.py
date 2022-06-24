@@ -2,6 +2,7 @@ import datetime
 from base_functions import *
 from components.schemas.ShopUnit import ShopUnit
 
+
 def test_no_valid_date(logger):
     '''Проверка на валидность updateDate. Ожидаем только iso формат'''
     update_node = {
@@ -270,10 +271,7 @@ def test_price(id_node, add_price):
             id_node] + add_price, f"Expected price {node.price}, got {old_price[id_node] + add_price}, id={id_node}"
 
 
-
-
 def update_parent(node_id, new_parent_id):
-
     node = ShopUnit.query.filter_by(id=node_id).first()
     assert node is not None, f'нет такого id={node_id}'
     old_parent_id = node.parentId
@@ -303,11 +301,7 @@ def update_parent(node_id, new_parent_id):
         if old_parent != new_parent:
             assert node_id not in old_parent.children, f"У старого родителя остался ребенок id_child={node_id}, if_parent={old_parent}"
         else:
-            assert node_id  in old_parent.children, f"Родитель не менялся id_child={node_id}, if_parent={old_parent}"
-
-
-
-
+            assert node_id in old_parent.children, f"Родитель не менялся id_child={node_id}, if_parent={old_parent}"
 
 
 def test_valid_update_parent(logger):
@@ -320,6 +314,7 @@ def test_valid_update_parent(logger):
     update_parent(node_id='73bc3b36-02d1-4245-ab35-3106c9ee1c65', new_parent_id='1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2')
     update_parent(node_id='73bc3b36-02d1-4245-ab35-3106c9ee1c65', new_parent_id='069cb8d7-bbdd-47d3-ad8f-82ef4c269df1')
     update_parent(node_id='74b81fda-9cdc-4b63-8927-c978afed5cf4', new_parent_id='069cb8d7-bbdd-47d3-ad8f-82ef4c269df1')
+
 
 def update_bd(logger):
     clear_bd(logger)
@@ -346,6 +341,7 @@ def test_all(logger):
     test_no_valid_child(logger)
     test_valid_child(logger)
     test_valid_update_parent(logger)
+
 
 if __name__ == "__main__":
     logger = create_logging()

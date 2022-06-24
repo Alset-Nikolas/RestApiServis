@@ -1,5 +1,6 @@
 from db import db
 
+
 class Error(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.Integer)

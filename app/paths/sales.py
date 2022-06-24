@@ -7,7 +7,9 @@ from sqlalchemy import func
 from paths.base_function import response_error_400
 from .node_id import get_info
 from flask import Blueprint
+
 bp_sales = Blueprint('sales', __name__)
+
 
 def time_valid(time, time_format):
     try:

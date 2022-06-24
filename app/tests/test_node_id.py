@@ -17,20 +17,21 @@ def check_response_node(id_leaf):
         children = node.children
 
         q_offer = 0
-        sum_ =0
+        sum_ = 0
         box = []
         while children != []:
             for child_id in children:
                 child = ShopUnit.query.filter_by(id=child_id).first()
-                if child.type=='OFFER':
-                    q_offer+=1
+                if child.type == 'OFFER':
+                    q_offer += 1
                     sum_ += child.price
                 else:
                     box += child.children
             children = box
             box = []
 
-        assert response['price'] == sum_//q_offer,f'Ждали сумму={sum_//q_offer} Получили={response["price"]} id={id_leaf}'
+        assert response[
+                   'price'] == sum_ // q_offer, f'Ждали сумму={sum_ // q_offer} Получили={response["price"]} id={id_leaf}'
     id_parent = response['parentId']
     check_response_node(id_parent)
 

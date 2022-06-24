@@ -3,8 +3,8 @@ from components.schemas.ShopUnit import ShopUnit
 from .base_function import response_error_404
 from my_logs.logg import info_log, warning_log
 from flask import Blueprint
-bp_node_id = Blueprint('node_id', __name__)
 
+bp_node_id = Blueprint('node_id', __name__)
 
 
 def get_info(ans, id_node: str) -> tuple:
@@ -24,8 +24,8 @@ def get_info(ans, id_node: str) -> tuple:
     if childs is None or len(childs) == 0:
         ans['children'] = None
         ans['price'] = node.price
-        summa__ =node.price  if childs is None else 0
-        return ans,summa__, offers
+        summa__ = node.price if childs is None else 0
+        return ans, summa__, offers
 
     for child_id in childs:
         ans_i = dict()

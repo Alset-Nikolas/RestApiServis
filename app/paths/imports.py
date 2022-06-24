@@ -10,6 +10,7 @@ from flask import request
 from my_logs.logg import info_log, warning_log
 from .base_function import delete_child, response_error_400
 from flask import Blueprint
+
 bp_imports = Blueprint('imports', __name__)
 
 
@@ -42,6 +43,7 @@ def is_category(node_id: object) -> bool:
         category = node.type
         return category == 'CATEGORY'
     return True
+
 
 def valid_structure_item(item: dict) -> bool:
     '''
@@ -107,6 +109,7 @@ def check_type_context(type: str, price: object) -> bool:
 
     return True
 
+
 def save_statistic(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
     problem = ShopUnitStatistic.query.filter_by(id=node_id).filter_by(date=time_).first()
     if problem is None:
@@ -116,6 +119,7 @@ def save_statistic(node_id: str, parentId: object, name: str, type_: str, price:
         db.session.add(new_node)
     else:
         logging.info('поле updateDate монотонно возрастает по условию')
+
 
 def add_node(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
     new_node = ShopUnit(id=node_id, name=name, date=time_, type=type_)
@@ -129,9 +133,6 @@ def add_node(node_id: str, parentId: object, name: str, type_: str, price: objec
     info_log.info(f'POST:/imports Новый обьект id={node_id}, 200')
 
     save_statistic(node_id, parentId, name, type_, price, time_)
-
-
-
 
 
 def update_parent(node_id: object, time_update: datetime) -> None:
@@ -180,6 +181,7 @@ def update_node(node_id: str, old_parentId, parentId: object, name: str, type_: 
         f'POST:/imports Обновление обьекта id={node_id} name={name}, price={price}, date={time_}, 200')
 
     save_statistic(node_id, parentId, name, type_, price, time_)
+
 
 def id_duplicate(ids: set, new_id: str) -> bool:
     '''

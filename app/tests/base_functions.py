@@ -125,25 +125,6 @@ def create_logging():
     return logger
 
 
-#
-# def check_bd(logger):
-#     '''Проверка значений в таблице NodeTree'''
-#     q_items = 0
-#     for data in IMPORT_BATCHES:
-#         time = data['updateDate']
-#         items = data['items']
-#         for item in items:
-#             node_id = item['id']
-#             q_items += 1
-#             ans_base = NodeTree.query.filter_by(node_id=node_id).all()
-#             assert len(ans_base) == 1
-#             ans_base = ans_base[0]
-#             assert item['type'] == ans_base.type_
-#             assert item['name'] == ans_base.name
-#             assert item['parentId'] == ans_base.parentId
-#     assert len(NodeTree.query.all()) == q_items, f'В таблице записей {len(NodeTree.query.all())}, '
-#     logger.info(f'check_bd: passed')
-#
 def clear_bd(logger):
     '''Очистка таблицы NodeTree'''
     for node in ShopUnit.query.all():
@@ -191,7 +172,6 @@ def add_new_category(logger):
 
 
 def create_random_tree():
-
     time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
     tree = []
     last_id_category = 1
@@ -210,15 +190,15 @@ def create_random_tree():
                 if last_id_category == 1:
                     random_parent = None
                 else:
-                    random_parent = random.randint(1, last_id_category-1)
+                    random_parent = random.randint(1, last_id_category - 1)
                 tree_i['items'].append({
                     "type": "CATEGORY" if type == 1 else 'OFFER',
                     "name": f"{last_id_category}_{last_id_offer}",
-                    "id": f"{str(last_id_category)}-10000" if type==1 else f"{str(last_id_offer)}-10000" ,
-                    "parentId": f"{random_parent}-10000" if random.randint(1,10) < 7 else None
+                    "id": f"{str(last_id_category)}-10000" if type == 1 else f"{str(last_id_offer)}-10000",
+                    "parentId": f"{random_parent}-10000" if random.randint(1, 10) < 7 else None
                 })
                 if type == 1:
-                    last_id_category +=1
+                    last_id_category += 1
                 else:
                     last_id_offer -= 1
                     tree_i['items'][-1]['price'] = random.randint(1000, 5000)
@@ -227,4 +207,3 @@ def create_random_tree():
             tree_i['updateDate'] = str(date_i.strftime(time_format))[:-8] + 'Z'
     date_end = date_i
     return tree, last_id_category, last_id_offer, date_first, date_end
-

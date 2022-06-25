@@ -31,11 +31,10 @@ def check_response_node(id_leaf):
             box = []
         if q_offer == 0:
             if response['type'] == 'CATEGORY':
-                assert response['price'] is None
-                assert response['children'] == []
+                assert response['price'] is None, f'id_problem={node.id} price={response["price"]}'
             else:
-                assert response['children'] is None
-                assert response['price'] == node.price
+                assert response['children'] is None, f'id_problem={node.id} children={response["children"]}'
+                assert response['price'] == node.price, f'id_problem={node.id} price={response["price"]}'
         else:
             assert response[
                        'price'] == sum_ // q_offer, f'Ждали сумму={sum_ // q_offer} Получили={response["price"]} id={id_leaf}'
@@ -51,14 +50,17 @@ def test_all(logger):
         check_response_node(id_)
     logger.info('check_response_node: passed')
 
+
 def test_node_id_random_tree(logger):
     logger.info('test_node_id_random_tree run')
     tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
-    print(last_id_category, last_id_offer, date_first, date_end)
     import_tree(logger, tree)
-    for id_ in [x.id for x in ShopUnit.query.filter_by(type='OFFER').all()]+[x.id for x in ShopUnit.query.filter_by(children=[]).all()]:
+    # + [x.id for x in ShopUnit.query.filter_by(
+    #             children=[]).all()]
+    for id_ in [x.id for x in ShopUnit.query.filter_by(type='OFFER').all()]:
         check_response_node(id_)
     logger.info('test_node_id_random_tree passed')
+
 
 if __name__ == "__main__":
     logger = create_logging()

@@ -17,5 +17,11 @@ def test_run():
     clear_bd(logger)
 
 
+def long_test(logger):
+    test_import.import_random_tree(logger)
+    test_delete.test_delete_random_tree(logger)
+    test_node_id.test_node_id_random_tree(logger)
+
+
 if __name__ == '__main__':
     test_run()

@@ -8,7 +8,7 @@ class ShopUnit(db.Model):
     parentId = db.Column(db.String(), nullable=True)
     type = db.Column(db.String(), db.ForeignKey('shop_unit_type.type'), nullable=False)
     price = db.Column(db.Integer, nullable=True)
-    children = db.Column(db.ARRAY(db.String(), db.ForeignKey('shop_unit.id')), nullable=True, default=[])
+    children = db.Column(db.ARRAY(db.String(), db.ForeignKey('shop_unit.id')), nullable=True)
 
     def __init__(self, id, name, date, type):
         self.id = id

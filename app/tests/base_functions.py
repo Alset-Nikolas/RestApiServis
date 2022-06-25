@@ -195,19 +195,18 @@ def create_random_tree():
             tree_i['items'] = []
             for q_item in range(random.randint(5, 15)):
                 type = random.randint(1, 2)
-                if last_id_category == 1:
+                if random.randint(1, 10) == 1 or last_id_category == 1:
                     random_parent = None
                 else:
                     random_parent = random.randint(1, last_id_category - 1)
+                    random_parent = f"{random_parent}-10000"
                 tree_i['items'].append({
                     "type": "CATEGORY" if type == 1 else 'OFFER',
                     "name": f"{last_id_category}_{last_id_offer}",
                     "id": f"{str(last_id_category)}-10000" if type == 1 else f"{str(last_id_offer)}-10000",
                 })
-                if random.randint(1, 10) < 7:
-                    tree_i['items'][-1]['parentId'] =  f"{random_parent}-10000"
-                else:
-                    tree_i['items'][-1]['parentId'] = None
+                tree_i['items'][-1]['parentId'] =  random_parent
+
                 if type == 1:
                     last_id_category += 1
                 else:

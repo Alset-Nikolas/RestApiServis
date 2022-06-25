@@ -26,7 +26,7 @@ def check_parent(id_node, parent_info_before_del):
         cop), f'После удаления OFFER ожидалось {sorted(cop)}, получили {sorted(parent.children)} ,Параметры родителя: name={parent.name}, id={parent.id}'
 
 def remove_ids_children(children_ids, ids):
-    if ids is None:
+    if ids is None or children_ids is None:
         return
     box = []
     while len(children_ids) != 0:
@@ -120,4 +120,4 @@ def test_delete_random_tree(logger):
 if __name__ == "__main__":
     logger = create_logging()
     test_all(logger)
-    # test_delete_random_tree(logger)
+    test_delete_random_tree(logger)

@@ -25,8 +25,6 @@ def get_info(ans, id_node: str) -> tuple:
         #т.е это offer
         ans['children'] = None
         ans['price'] = node.price
-        print(ans['type'])
-        print(ans['price'] )
         return ans, node.price, 1
     if len(childs) == 0:
         #пустая категория

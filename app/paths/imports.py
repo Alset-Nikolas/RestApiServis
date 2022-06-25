@@ -136,8 +136,8 @@ def add_node(node_id: str, parentId: object, name: str, type_: str, price: objec
     new_node.parentId = parentId
     add_child(id_child=node_id, id_parent=parentId)
     new_node.price = price
-    if type_ == 'OFFER':
-        new_node.children = None
+    if type_ == 'CATEGORY':
+        new_node.children = []
     db.session.add(new_node)
     save_import_fact(node_id, name, parentId, type_, price)
 

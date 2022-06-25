@@ -2,12 +2,14 @@ from base_functions import *
 from components.schemas.ShopUnit import ShopUnit
 
 
+
 def check_response_node(id_leaf):
     if id_leaf is None:
         return
     status, response = request(f"/nodes/{id_leaf}", json_response=True)
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     assert response['type'] in ['OFFER', 'CATEGORY']
+    assert check_time(response['date']), f'{response["date"]}'
     if response['type'] == 'OFFER':
         assert response['price'] >= 0, f'price > 0 , price={response["price"]}'
         assert response['name'] is not None, f"name is None"
@@ -32,6 +34,7 @@ def check_response_node(id_leaf):
         if q_offer == 0:
             if response['type'] == 'CATEGORY':
                 assert response['price'] is None, f'id_problem={node.id} price={response["price"]}'
+                assert len(response['children']) == len(node.children), f'Не совпадает кол-во детей должно={len(node.children)}, сечас={len(response["children"])} '
             else:
                 assert response['children'] is None, f'id_problem={node.id} children={response["children"]}'
                 assert response['price'] == node.price, f'id_problem={node.id} price={response["price"]}'
@@ -53,8 +56,8 @@ def test_all(logger):
 
 def test_node_id_random_tree(logger):
     logger.info('test_node_id_random_tree run')
-    tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
-    import_tree(logger, tree)
+    # tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
+    # import_tree(logger, tree)
     # + [x.id for x in ShopUnit.query.filter_by(
     #             children=[]).all()]
     for id_ in [x.id for x in ShopUnit.query.filter_by(type='OFFER').all()]:

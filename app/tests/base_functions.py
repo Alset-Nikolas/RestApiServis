@@ -8,6 +8,7 @@ import logging
 from components.schemas.ShopUnit import ShopUnit
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 from main import db
+from datetime import date
 
 API_BASEURL = "http://localhost:5000"
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -226,3 +227,10 @@ def import_tree(logger, tree):
         status, x = request("/imports", method="POST", data=tree_i)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info('import random tree')
+
+def check_time(date_string):
+    try:
+        datetime.datetime.strptime(date_string, TIME_FORMAT)
+        return True
+    except ValueError:
+        return False

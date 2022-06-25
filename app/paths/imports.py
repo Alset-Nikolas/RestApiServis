@@ -8,7 +8,7 @@ from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 from components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
 from flask import request
 from my_logs.logg import info_log, warning_log
-from .base_function import delete_child, response_error_400
+from .base_function import delete_child, response_error_400, TIME_FORMAT
 from flask import Blueprint
 
 bp_imports = Blueprint('imports', __name__)
@@ -84,6 +84,9 @@ def value_or_none(dict_: dict, key_: str) -> object:
 
 
 def add_child(id_child: str, id_parent: object) -> None:
+    '''
+        У узла id_parent появился дочерний эл-т id_child
+    '''
     parent = ShopUnit.query.filter_by(id=id_parent).first()
     if parent is not None:
         if parent.children is not None:
@@ -111,6 +114,9 @@ def check_type_context(type: str, price: object) -> bool:
 
 
 def save_statistic(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
+    '''
+        Фиксируем любое изменение для статистики
+    '''
     problem = ShopUnitStatistic.query.filter_by(id=node_id).filter_by(date=time_).first()
     if problem is None:
         new_node = ShopUnitStatistic(id=node_id, name=name, date=time_, type=type_)
@@ -122,12 +128,17 @@ def save_statistic(node_id: str, parentId: object, name: str, type_: str, price:
 
 
 def add_node(node_id: str, parentId: object, name: str, type_: str, price: object, time_: datetime) -> None:
+    '''
+        Функция добавления новой записи по id
+    '''
+
     new_node = ShopUnit(id=node_id, name=name, date=time_, type=type_)
     new_node.parentId = parentId
     add_child(id_child=node_id, id_parent=parentId)
     new_node.price = price
+    if type_ == 'OFFER':
+        new_node.children = None
     db.session.add(new_node)
-
     save_import_fact(node_id, name, parentId, type_, price)
 
     info_log.info(f'POST:/imports Новый обьект id={node_id}, 200')
@@ -135,17 +146,40 @@ def add_node(node_id: str, parentId: object, name: str, type_: str, price: objec
     save_statistic(node_id, parentId, name, type_, price, time_)
 
 
-def update_parent(node_id: object, time_update: datetime) -> None:
+def update_date_parent(node_id: object, time_update: datetime) -> None:
+    '''
+        Функция обновления даты по id родителя
+    '''
     if node_id is None:
         return
     node = ShopUnit.query.filter_by(id=node_id).first()
     if node is not None:
         node.date = time_update
         db.session.add(node)
-        update_parent(node_id=node.parentId, time_update=time_update)
+        save_statistic(node_id=node.id, parentId=node.parentId, name=node.name, type_=node.type, price=node.price,
+                       time_=time_update)
+        update_date_parent(node_id=node.parentId, time_update=time_update)
+
+
+def update_date_children(id_parent: str, date_update: datetime):
+    '''
+        Функция обнавления времени дочерних эл-ов id_parent
+    '''
+    parent = ShopUnit.query.filter_by(id=id_parent).first()
+    children = parent.children
+    if children:
+        for ch_id in children:
+            update_date_children(ch_id, date_update)
+            child = ShopUnit.query.filter_by(id=ch_id).first()
+            child.date = date_update
+            save_statistic(node_id=ch_id, parentId=child.parentId, name=child.name, type_=child.type, price=child.price,
+                           time_=date_update)
 
 
 def save_import_fact(node_id: str, name: str, parentId: object, type: str, price: object) -> None:
+    '''
+        Фиксируем факт импорта
+    '''
     unit_import = ShopUnitImport.query.filter_by(id=node_id).first()
     if unit_import is None:
         unit_import = ShopUnitImport(id=node_id, name=name, type=type)
@@ -157,14 +191,20 @@ def save_import_fact(node_id: str, name: str, parentId: object, type: str, price
 
 
 def save_request_fact(ids: set, update_date: datetime):
+    '''
+        Фиксируем факт отправки
+    '''
     new_import_request = ShopUnitImportRequest()
     new_import_request.items = list(ids)
     new_import_request.updateDate = update_date
     db.session.add(new_import_request)
 
 
-def update_node(node_id: str, old_parentId, parentId: object, name: str, type_: str, price: object,
+def update_node(node_id: str, old_parentId: object, parentId: object, name: str, type_: str, price: object,
                 time_: datetime) -> None:
+    '''
+        Обновление значений записи в бд по id
+    '''
     node = ShopUnit.query.filter_by(id=node_id).first()
     node.parentId = parentId
     delete_child(id_child=node_id, id_parent=old_parentId)
@@ -186,6 +226,7 @@ def update_node(node_id: str, old_parentId, parentId: object, name: str, type_: 
 def id_duplicate(ids: set, new_id: str) -> bool:
     '''
             Проверка на наличие дубликатов id.
+            ids - множество всех id в текущем запросе
     '''
     if new_id not in ids:
         ids.add(new_id)
@@ -195,65 +236,69 @@ def id_duplicate(ids: set, new_id: str) -> bool:
     return True
 
 
+def main_handler_item(item: dict, update_date: datetime) -> int:
+    '''
+        Основная функция обработки валидной item и валидной update_date
+    '''
+    new_parent_id = value_or_none(dict_=item, key_='parentId')
+    new_price = value_or_none(dict_=item, key_='price')
+
+    node = ShopUnit.query.filter_by(id=item['id']).first()
+    type_obj = ShopUnitType.query.filter_by(type=item['type']).first()
+    new_type = type_obj.type
+
+    if not check_type_context(type_obj.type, new_price):
+        return response_error_400()
+
+    old_parent_id = None
+    if node is not None:
+        # Если уже есть в базе такой id, значения нужно обновить запись
+        if node.type != new_type:
+            return 400
+        old_parent_id = node.parentId
+        update_node(node_id=item['id'], parentId=new_parent_id, name=item['name'],
+                    type_=new_type, price=new_price, time_=update_date, old_parentId=old_parent_id, )
+        update_date_children(id_parent=item['id'], date_update=update_date)
+    else:
+        # иначе создаем новую запись
+        add_node(node_id=item['id'], parentId=new_parent_id, name=item['name'], type_=new_type,
+                 price=new_price, time_=update_date)
+
+    if new_parent_id is not None:
+        update_date_parent(new_parent_id, time_update=update_date)
+    if old_parent_id is not None:
+        update_date_parent(old_parent_id, time_update=update_date)
+
+    return 200
+
+
 @bp_imports.route('/imports', methods=['POST'])
 def imports():
     '''
         Обработчик для импортирования новых товаров и/или категорий.
     '''
+
     info_log.info('handler:POST:/imports ')
     if not request.is_json:
         info_log.warning(f'handler:POST:/imports это не json')
         return response_error_400()
 
     data = request.get_json()
-    time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
-    if not valid_request_json(data, time_format):
+    if not valid_request_json(data, TIME_FORMAT):
         return response_error_400()
 
-    update_date = datetime.datetime.strptime(data['updateDate'], time_format)
+    update_date = datetime.datetime.strptime(data['updateDate'], TIME_FORMAT)
     update_date = update_date.isoformat()
 
     ids = set()
     for item in data['items']:
-        flags = [bool(not valid_structure_item(item)), bool(not valid_item(item)), bool(id_duplicate(ids, item['id']))]
-        if any(flags):
+        if (not valid_structure_item(item)) or (not valid_item(item)) or (id_duplicate(ids, item['id'])):
             return response_error_400()
-        new_parent_id = value_or_none(dict_=item, key_='parentId')
-        price = value_or_none(dict_=item, key_='price')
-        node = ShopUnit.query.filter_by(id=item['id']).first()
-        type_obj = ShopUnitType.query.filter_by(type=item['type']).first()
-        type = type_obj.type
-        #todo Проверка на изменение типа!!
-        if not check_type_context(type_obj.type, price):
+        if main_handler_item(item=item, update_date=update_date) != 200:
+            logging.warning('handler:POST:/imports Нельзя менять типы')
             return response_error_400()
-        old_parent_id = None
-        if node is not None:
-            old_parent_id = node.parentId
-            update_node(
-                node_id=item['id'],
-                parentId=new_parent_id,
-                name=item['name'],
-                type_=type,
-                price=price,
-                time_=update_date,
-                old_parentId=old_parent_id,
-            )
-        else:
-            add_node(
-                node_id=item['id'],
-                parentId=new_parent_id,
-                name=item['name'],
-                type_=type,
-                price=price,
-                time_=update_date
-            )
 
-        if new_parent_id is not None:
-            update_parent(new_parent_id, time_update=update_date)
-        if old_parent_id is not None:
-            update_parent(old_parent_id, time_update=update_date)
-    # save_request_fact(ids, update_date)
-
+    save_request_fact(ids, update_date)
     db.session.commit()
     return '', 200

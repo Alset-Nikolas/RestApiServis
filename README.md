@@ -1,8 +1,9 @@
-# RestApiServis - Задание от Яндекс Школа бэкенд-разработки 2022г
+# RestApiServis - Задание от "Яндекс Школа бэкенд-разработки 2022г"
 
 # Для запуска
 1. Заходим на сервер или локальную машину
-2. Клонируем репозиторий https://github.com/Alset-Nikolas/RestApiServis
+2. Клонируем репозиторий в папку new_app
+   - git clone https://github.com/Alset-Nikolas/RestApiServis
 3. Затем нужно забилдить и поднять контейнер с помощью Docker Compose в этом помогут команды ниже
    - sudo docker-compose -f docker-compose.dev.yml build # Билд
    - sudo docker-compose -f docker-compose.dev.yml up # Запуск

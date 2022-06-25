@@ -1,3 +1,5 @@
+import datetime
+from sqlalchemy import func
 from flask import jsonify
 from flask import Blueprint
 from db import db
@@ -13,13 +15,20 @@ def delete_one_node(node_id: int) -> None:
     '''
         Удалить узел по id
     '''
+
+
     node = ShopUnit.query.filter_by(id=node_id).first()
     info_log.info(f'/delete/<id_>  Удаляем id={node_id}. name="{node.name}"')
+    date_create = node.date
+    recursively_delete_statistic(node_id, date_create)
     db.session.delete(node)
 
-    for node_stat in ShopUnitStatistic.query.filter_by(id=node_id).all():
-        db.session.delete(node_stat)
 
+
+def delete_statistic(node_id, date_create):
+    print('delete_statistic', node_id)
+    for node_stat in ShopUnitStatistic.query.filter_by(id=node_id).filter(func.DATE(ShopUnitStatistic.date) <= date_create).all():
+        db.session.delete(node_stat)
 
 def recursively_delete_nodes(node_id: int) -> None:
     '''
@@ -35,6 +44,20 @@ def recursively_delete_nodes(node_id: int) -> None:
         recursively_delete_nodes(child_id)
     delete_one_node(node_id)
 
+def recursively_delete_statistic(node_id: int, date_create:datetime) -> None:
+    '''
+        Рекурсивно удалить детей узла из таблицы
+    '''
+    if node_id is None:
+        return
+    children = ShopUnitStatistic.query.filter_by(parentId=node_id).filter(func.DATE(ShopUnitStatistic.date) <= date_create).all()
+    info_log.info(f'/delete/<id_> Рекурсивно stat удаляем id={node_id}. детей={children}')
+    if children is None:
+        delete_statistic(node_id, date_create)
+        return
+    for child_id in [x.id for x in children]:
+        recursively_delete_statistic(child_id, date_create)
+    delete_statistic(node_id, date_create)
 
 def valid_id(id_: int) -> bool:
     '''

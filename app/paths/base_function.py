@@ -6,7 +6,7 @@ from components.schemas.Error import Error
 from components.schemas.ShopUnit import ShopUnit
 from flask import jsonify
 
-
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 def response_error_400():
     db.session.rollback()
     db.session.add(Error(code=400, message='Validation Failed'))
@@ -21,10 +21,11 @@ def response_error_404():
     return jsonify({"code": 404, "message": "Item not found"}), 404
 
 
-def delete_child(id_child: str, id_parent: str) -> None:
+def delete_child(id_child: str, id_parent: object) -> None:
     parent = ShopUnit.query.filter_by(id=id_parent).first()
     if parent:
         if parent.children is not None:
             ch = list(parent.children)
             ch.pop(ch.index(id_child))
             parent.children = set(ch)
+

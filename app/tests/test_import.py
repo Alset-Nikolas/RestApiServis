@@ -123,6 +123,31 @@ def test_no_valid_child(logger):
     assert status == 400, f"Expected HTTP status code 400, got {status}"
     logger.info(f'test_no_valid_name: passed')
 
+def test_no_valid_child_1(logger):
+    '''Родителем OFFER - только CATEGORY'''
+    update_node = {
+        "items": [
+            {
+                "type": 'OFFER',
+                "name": '3',
+                "id": 'MY_ID',
+                "parentId": None,
+                "price": 1
+            },
+            {
+                "type": 'CATEGORY',
+                "name": '2',
+                "id": '12*10' * 3,
+                "parentId": 'MY_ID',
+                "price": 1
+            },
+
+        ],
+        "updateDate": "2022-02-03T12:00:00.000Z"
+    }
+    status, x = request("/imports", method="POST", data=update_node)
+    assert status == 400, f"Expected HTTP status code 400, got {status}"
+    logger.info(f'test_no_valid_child_1: passed')
 
 def test_valid_child(logger):
     '''Родителем OFFER - только CATEGORY'''
@@ -150,6 +175,24 @@ def test_valid_child(logger):
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info(f'test_no_valid_name: passed')
 
+def test_valid_child_1(logger):
+    '''Родителем OFFER - только CATEGORY'''
+    update_node = {
+        "items": [
+            {
+                "type": 'OFFER',
+                "name": '2',
+                "id": '12*10' * 3,
+                "parentId": None,
+                "price": 1
+            },
+
+        ],
+        "updateDate": "2022-02-03T12:00:00.000Z"
+    }
+    status, x = request("/imports", method="POST", data=update_node)
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
+    logger.info(f'test_valid_child_1: passed')
 
 def test_valid_name_str(logger):
     update_node = {
@@ -195,6 +238,29 @@ def test_no_valid_id(logger):
     logger.info(f'test_no_valid_id: passed')
 
 
+def check_date(id_check, time_update):
+    node = ShopUnit.query.filter_by(id=id_check).first()
+    assert node.date.isoformat() == time_update[:-6], f"Expected datetime time_update={time_update[:-6]}, got node.date={node.date.isoformat()}, id={id_check}"
+    parent_id = node.parentId
+    while parent_id is not None:
+        parent = ShopUnit.query.filter_by(id=parent_id).first()
+        if not parent:
+            break
+        assert parent.date.isoformat() == time_update[:-6], f"Expected datetime time_update={time_update[:-6]}, got parent.date={parent.date.isoformat()}, id={parent_id}"
+        parent_id = parent.parentId
+
+    children = node.children
+    box = []
+    while children:
+        for ch_id in children:
+            child = ShopUnit.query.filter_by(id=ch_id).first()
+            assert child.date.isoformat() == time_update[
+                                              :-6], f"Expected datetime time_update={time_update[:-6]}, got child.date={child.date.isoformat()}, id={ch_id}"
+            if child.children:
+                box+=child.children
+        children = box
+        box = []
+
 def test_valid_date(id_node, add_days):
     def update_date():
         node = ShopUnit.query.filter_by(id=id_node).first()
@@ -213,16 +279,10 @@ def test_valid_date(id_node, add_days):
         }
         status, x = request("/imports", method="POST", data=update_node)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
-        return new_data
+        return new_data.strftime("%Y-%m-%dT%H:%M:%S.%f%z")[:-1]
 
     new_time = update_date()
-    node = ShopUnit.query.filter_by(id=id_node).first()
-    assert node.date == new_time, f"Expected datetime {new_time}, got {node.date}, id={id_node}"
-    parent_id = node.parentId
-    while parent_id is not None:
-        parent = ShopUnit.query.filter_by(id=parent_id).first()
-        assert parent.date == new_time, f"Expected datetime {new_time}, got {parent.date}, id={parent_id}"
-        parent_id = parent.parentId
+    check_date(id_node, new_time)
 
 
 def test_price(id_node, add_price):
@@ -316,9 +376,46 @@ def test_valid_update_parent(logger):
     update_parent(node_id='74b81fda-9cdc-4b63-8927-c978afed5cf4', new_parent_id='069cb8d7-bbdd-47d3-ad8f-82ef4c269df1')
 
 
-def update_bd(logger):
+
+
+def import_random_tree(logger):
+    def remember_parent(items):
+        parents = dict()
+        for item in items:
+            id =item['id']
+            pid = item['parentId']
+            assert id not in parents
+            parents[id] = pid
+        return parents
+    tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
     clear_bd(logger)
-    test_import(logger)
+    import_tree(tree)
+    for tree_i in tree:
+        time_update = datetime.datetime.strptime(tree_i['updateDate'], TIME_FORMAT)
+        time_update = time_update.isoformat()
+        status, x = request("/imports", method="POST", data=tree_i)
+        old_parents = remember_parent(tree_i['items'])
+        assert status == 200, f"Expected HTTP status code 200, got {status}"
+        new_parents = {id: ShopUnit.query.filter_by(id=id).first().parentId for id in old_parents.keys()}
+        for item in tree_i['items']:
+            id_item = item['id']
+            check_date(id_item, time_update)
+            for id in old_parents.keys():
+                person = ShopUnit.query.filter_by(id=id).first()
+                id_old_parent = old_parents[id]
+                old_parent = ShopUnit.query.filter_by(id=id_old_parent).first()
+                id_new_parent = new_parents[id]
+                new_parent = ShopUnit.query.filter_by(id=id_new_parent).first()
+                if id_new_parent != id_old_parent:
+                    if old_parent:
+                        assert id not in old_parent.children
+                        assert person.parentId != id_old_parent
+                    if new_parent:
+                        assert id in new_parent.children
+                        assert person.parentId == id_new_parent
+                else:
+                    assert person.parentId == id_new_parent
+
 
 
 def test_all(logger):
@@ -331,8 +428,10 @@ def test_all(logger):
     for i, node in enumerate(all_node_ids):
         test_price(node, add_price=i + 1)
     logger.info(f'test_price: passed')
+    test_valid_child_1(logger)
     test_no_valid_date(logger)
     test_no_valid_type(logger)
+    test_no_valid_child_1(logger)
     test_no_valid_price(logger)
     test_no_valid_name(logger)
     test_no_valid_id(logger)
@@ -342,10 +441,14 @@ def test_all(logger):
     test_valid_child(logger)
     test_valid_update_parent(logger)
 
+    n = 3
+    logger.info(f'test random_tree n={n}')
+    for i in range(n):
+        logger.info(f'test random_tree {i}/{n}')
+        import_random_tree(logger)
+    logger.info(f'test random_tree passed')
+
 
 if __name__ == "__main__":
     logger = create_logging()
     test_all(logger)
-    # test_import(logger)
-    # todo проверить у 2 родителя меняются ли даты
-

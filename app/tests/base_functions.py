@@ -6,11 +6,12 @@ import urllib.parse
 import urllib.request
 import logging
 from components.schemas.ShopUnit import ShopUnit
+from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 from main import db
 
 API_BASEURL = "http://localhost:5000"
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
-
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 IMPORT_BATCHES = [
     {
         "items": [
@@ -132,6 +133,11 @@ def clear_bd(logger):
     db.session.commit()
     assert len(ShopUnit.query.all()) == 0
 
+    for node in ShopUnitStatistic.query.all():
+        db.session.delete(node)
+    db.session.commit()
+    assert len(ShopUnit.query.all()) == 0
+
     logger.info(f'clear_bd: passed')
 
 
@@ -172,13 +178,15 @@ def add_new_category(logger):
 
 
 def create_random_tree():
-    time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
     tree = []
     last_id_category = 1
     last_id_offer = -1
     date = "2022-02-01T12:00:00.000Z"
-    date_first = datetime.datetime.strptime(date, time_format)
+    date_first = datetime.datetime.strptime(date, TIME_FORMAT)
     date_i = date_first
+
+    max_last_id_category = 0
+    min_last_id_offer = 0
     for days_number in range(10):
         last_id_category = 1
         last_id_offer = -1
@@ -195,15 +203,27 @@ def create_random_tree():
                     "type": "CATEGORY" if type == 1 else 'OFFER',
                     "name": f"{last_id_category}_{last_id_offer}",
                     "id": f"{str(last_id_category)}-10000" if type == 1 else f"{str(last_id_offer)}-10000",
-                    "parentId": f"{random_parent}-10000" if random.randint(1, 10) < 7 else None
                 })
+                if random.randint(1, 10) < 7:
+                    tree_i['items'][-1]['parentId'] =  f"{random_parent}-10000"
+                else:
+                    tree_i['items'][-1]['parentId'] = None
                 if type == 1:
                     last_id_category += 1
                 else:
                     last_id_offer -= 1
                     tree_i['items'][-1]['price'] = random.randint(1000, 5000)
             tree.append(tree_i)
-            date_i = datetime.datetime.strptime(date, time_format) + datetime.timedelta(days=days_number)
-            tree_i['updateDate'] = str(date_i.strftime(time_format))[:-8] + 'Z'
+            date_i = datetime.datetime.strptime(date, TIME_FORMAT) + datetime.timedelta(days=days_number)
+            tree_i['updateDate'] = date_i.strftime(TIME_FORMAT)
+        max_last_id_category = max(max_last_id_category, last_id_category)
+        min_last_id_offer = min(min_last_id_offer, last_id_offer)
     date_end = date_i
-    return tree, last_id_category, last_id_offer, date_first, date_end
+    return tree, max_last_id_category, min_last_id_offer, date_first, date_end
+
+def import_tree(logger, tree):
+    clear_bd(logger)
+    for tree_i in tree:
+        status, x = request("/imports", method="POST", data=tree_i)
+        assert status == 200, f"Expected HTTP status code 200, got {status}"
+    logger.info('import random tree')

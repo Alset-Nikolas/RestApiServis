@@ -4,7 +4,6 @@ import random
 from base_functions import *
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 
-time_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
 
 def clear_history():
@@ -16,7 +15,7 @@ def clear_history():
 
 def import_history(data_first="2022-02-01T12:00:00.000Z", days=10):
     for i, price in enumerate(range(10)):
-        date = datetime.datetime.strptime(data_first, time_format) + datetime.timedelta(days=i)
+        date = datetime.datetime.strptime(data_first, TIME_FORMAT) + datetime.timedelta(days=i)
 
         tree_i = {
             "items": [
@@ -41,17 +40,12 @@ def import_history(data_first="2022-02-01T12:00:00.000Z", days=10):
                     "price": 2 * price + 1
                 }
             ],
-            "updateDate": str(date.strftime(time_format))[:-8] + 'Z'
+            "updateDate": str(date.strftime(TIME_FORMAT))[:-8] + 'Z'
         }
 
         status, x = request("/imports", method="POST", data=tree_i)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
 
-
-def import_tree(tree):
-    for tree_i in tree:
-        status, x = request("/imports", method="POST", data=tree_i)
-        assert status == 200, f"Expected HTTP status code 200, got {status}"
 
 
 def test_stats(id, start_t=None, end_t=None):
@@ -81,7 +75,7 @@ def test_stats(id, start_t=None, end_t=None):
 
 
 def date_format(date_str):
-    return datetime.datetime.strptime(date_str, time_format)
+    return datetime.datetime.strptime(date_str, TIME_FORMAT)
 
 
 def test_valid_date(logger, n=1):
@@ -98,8 +92,8 @@ def test_valid_date(logger, n=1):
             date_first = date_first + datetime.timedelta(days=random.randint(-5, 5))
             date_end = date_end + datetime.timedelta(days=random.randint(-5, 5))
 
-        start_day = date_first.strftime(time_format)
-        date_end = date_end.strftime(time_format)
+        start_day = date_first.strftime(TIME_FORMAT)
+        date_end = date_end.strftime(TIME_FORMAT)
 
         for id_offer in range(-1, last_id_offer, -1):
             test_stats(id=str(id_offer) + '-10000', start_t=start_day, end_t=date_end)

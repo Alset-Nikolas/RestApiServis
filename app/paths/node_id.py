@@ -21,28 +21,31 @@ def get_info(ans, id_node: str) -> tuple:
     sum_price = 0
     offers = 0
     childs = node.children
-    if childs is None or len(childs) == 0:
+    if childs is None:
+        #т.е это offer
         ans['children'] = None
         ans['price'] = node.price
-        summa__ = node.price if childs is None else 0
-        return ans, summa__, offers
+        print(ans['type'])
+        print(ans['price'] )
+        return ans, node.price, 1
+    if len(childs) == 0:
+        #пустая категория
+        ans['children'] = []
+        ans['price'] = None
+        return ans, 0, 0
 
     for child_id in childs:
         ans_i = dict()
         ans_i, sum_i, offers_i = get_info(ans_i, child_id)
-        # ans['children'].append(copy.deepcopy(ans_i))
         ans['children'].append(ans_i)
-        child = ShopUnit.query.filter_by(id=child_id).first()
-        child_type = child.type
-        if child_type == 'OFFER':
-            offers += 1
-
         sum_price += sum_i
         offers += offers_i
+
     if offers == 0:
-        ans["price"] = 0
+        ans["price"] = None
     else:
         ans["price"] = sum_price // offers
+
     return ans, sum_price, offers
 
 

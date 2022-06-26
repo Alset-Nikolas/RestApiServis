@@ -19,12 +19,12 @@ LOGGING_CONFIG = {
     'loggers': {
         'my_logger': {
             'handlers': ['stream_handler'],
-            'level': 'WARNING',
+            'level': 'ERROR',
             'propagate': True
         },
         'my_logger_error': {
             'handlers': ['stream_handler'],
-            'level': 'WARNING',
+            'level': 'ERROR',
             'propagate': True
         }
     }

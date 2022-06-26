@@ -33,7 +33,7 @@ from my_logs.logg import info_log, warning_log
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=False, host='0.0.0.0')
 
 '''
 export FLASK_APP=app/main

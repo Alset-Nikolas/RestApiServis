@@ -533,14 +533,6 @@ def test_all(logger):
     test_valid_child(logger)
     test_valid_update_parent(logger)
 
-    n = 1
-    logger.info(f'test random_tree n={n}')
-    for i in range(n):
-        logger.info(f'test random_tree {i}/{n}')
-        test_import_random_tree(logger)
-    logger.info(f'test random_tree passed')
-
-
 if __name__ == "__main__":
     logger = info_log
     test_all(logger)

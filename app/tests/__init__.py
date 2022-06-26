@@ -13,10 +13,7 @@ def test_run(logger):
     test_import.test_all(logger)
     test_node_id.test_all(logger)
     main(logger)
-    test_static.test_valid_date(logger)
-    clear_bd(logger)
     clear_bd_after_tests()
-
 
 def long_test_run(logger):
     '''

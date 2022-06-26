@@ -1,4 +1,5 @@
 import datetime
+import logging
 import random
 from my_logs.logg import info_log
 from .base_functions import *
@@ -55,7 +56,6 @@ def test_stats(id, start_t=None, end_t=None):
 
 def date_format(date_str):
     return datetime.datetime.strptime(date_str, TIME_FORMAT)
-
 
 def test_valid_date(logger, n=1):
     '''Провереям '''

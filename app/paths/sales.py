@@ -5,7 +5,6 @@ from components.schemas.ShopUnit import ShopUnit
 from components.schemas.ShopUnitType import ShopUnitType
 from sqlalchemy import func
 from paths.base_function import response_error_400
-from .node_id import get_info
 from flask import Blueprint
 
 bp_sales = Blueprint('sales', __name__)
@@ -19,17 +18,31 @@ def time_valid(time, time_format):
         return False
 
 
-def filter_date(time):
-    nodes = ShopUnit.query.filter(func.DATE(ShopUnit.date) <= time)
-    nodes = nodes.filter(func.DATE(ShopUnit.date) >= time - datetime.timedelta(hours=24))
-    nodes = nodes.filter_by(type='OFFER')
+def get_info(node_id):
+    node = ShopUnit.query.filter_by(id=node_id).first()
+    info = {
+        'id': node.id,
+        'name': node.name,
+        'date': str(node.date.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3] + 'Z'),
+        'parentId': node.parentId,
+        'price': node.price,
+        'type': node.type
+    }
+    return info
 
+
+def filter_date(time):
+    TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
+    time = datetime.datetime.strptime(time.isoformat()[:-6], TIME_FORMAT)
+    nodes = ShopUnit.query.filter_by(type='OFFER')
+    nodes = nodes.filter(ShopUnit.date <= time)
+    nodes = nodes.filter(ShopUnit.date >= time - datetime.timedelta(hours=24)).all()
     info_log.info(f'/sales time={time} после фильтра {[(x.name, x.date) for x in nodes]}')
     ans = []
+    # nodes = ShopUnit.query.filter(ShopUnit.date.between(time, time - datetime.timedelta(hours=24)))
     for node in nodes:
-        ans_i, _, _ = get_info({}, node.id)
-        ans.append(ans_i)
-    return ans
+        ans.append(get_info(node.id))
+    return {"items": ans}
 
 
 @bp_sales.route('/sales', methods=['GET'])

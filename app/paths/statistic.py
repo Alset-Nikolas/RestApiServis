@@ -21,7 +21,7 @@ def time_valid(time, time_format):
 
 def calc_price(ans, id, t):
     node = ShopUnitStatistic.query.filter_by(id=id).filter_by(date=t).first()
-    ans['date'] = str(node.date.strftime(time_format))[:-8] + 'Z'
+    ans['date'] = str(node.date.strftime(time_format))[:-3] + 'Z'
     ans['type'] = node.type
     ans['name'] = node.name
     ans['id'] = id
@@ -86,11 +86,14 @@ def statistic(id_):
     if 'dateStart' in request.args:
         flags[0] = True
         date_start = request.args['dateStart']
-        nodes = nodes.filter(func.DATE(ShopUnitStatistic.date) >= date_start)
+        nodes = nodes.filter(ShopUnitStatistic.date >= date_start)
+        print(nodes.all())
+
     if 'dateEnd' in request.args:
         flags[1] = True
         date_end = request.args['dateEnd']
-        nodes = nodes.filter(func.DATE(ShopUnitStatistic.date) < date_end)
+        nodes = nodes.filter(ShopUnitStatistic.date < date_end)
+
     if all(flags):
         if date_start > date_end:
             info_log.warning(f'/node/<id_>/statistic start_time <= end_time  {date_start} <=! {date_end}')

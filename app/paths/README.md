@@ -44,12 +44,12 @@
           CATEGORY2*                CATEGORY3                                   CATEGORY2*                CATEGORY3*                        
         /           \             /         \                                            \             /         \                        
     CATEGORY4*         OFFER1   CATEGORY5      CATEGORY6                                OFFER1   CATEGORY5*      CATEGORY6                         
-    |                        /      \                                                                  /        \                            
-    OFFER2                  CATEGORY7   OFFER3                                                        CATEGORY7*   OFFER3                        
-                                                                                                          \                         
-                                                                                                           CATEGORY4*   
-                                                                                                                  |      
-                                                                                                                OFFER2 
+    |                        /      \                                                            /        \                            
+    OFFER2                  CATEGORY7   OFFER3                                                  CATEGORY7*   OFFER3                        
+                                                                                                    \                         
+                                                                                                     CATEGORY4*   
+                                                                                                            |      
+                                                                                                          OFFER2 
     -> обновить время у преков до корня.                               -> обновить время у новых и старых предков до корня.  
 
     Итог: Если обновление затронули parentId   -> нужно обновить время у старого родителя до корня и нового родиеля до корня
@@ -66,11 +66,25 @@
               CATEGORY2*                CATEGORY3                                                           CATEGORY3*                        
             /           \             /         \                                                          /         \                        
     CATEGORY4*         OFFER1   CATEGORY5      CATEGORY6                                             CATEGORY5*      CATEGORY6                         
-                                /      \                                                                /        \                            
-                               CATEGORY7   OFFER3                                                      CATEGORY7*   OFFER3                        
+      |                          /      \                                                                    /        \                            
+      OFFER2                    CATEGORY7   OFFER3                                                          CATEGORY7*   OFFER3                        
                                                                                                                                        
                                                                                                                                         
     -> удалить offer2 и удалить ссылку у родителя                              -> удалить CATEGORY2 + детей!! и удалить ссылку у родителя  .  
 
-     Итог: Если удаление offer -> удаление себя и факт у родителя
-           Если CATEGORY -> рекурсивно вниз удаляем +себя+факт у родителя
+     Итог: Если удаление offer -> удаление себя и ссылку у родителя
+           Если CATEGORY -> рекурсивно вниз удаляем +себя+ссылку у родителя
+
+
+# 3. node_id
+    1. type == 'OFFER'                                               2. type == 'CATEGORY'                             
+    пусть информация о offer2                                                                          
+
+    -> Ифрмаци о себе                                                   -> Ифрмаци о себе + дети
+        При это поле    children == None !!!                  а. Случай детей нет:  а. Случай дети есть:
+                                                                 children ==[]      children ==[(информация о детях)]
+                                                                 price=None         price=sum(листья.price) // (кол-во листьев)
+        
+     Итог: Если удаление offer -> удаление себя и ссылку у родителя
+           Если CATEGORY -> рекурсивно вниз удаляем +себя+ссылку у родителя
+

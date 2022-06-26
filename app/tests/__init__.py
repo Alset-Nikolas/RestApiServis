@@ -8,7 +8,7 @@ from my_logs.logg import info_log
 from test_sales import test_valid_date
 
 
-def test_run():
+def test_run(logger):
     '''
         Основные тесты
     '''
@@ -22,7 +22,7 @@ def test_run():
     clear_bd(logger)
 
 
-def long_test(logger):
+def long_test_run(logger):
     '''
         Более глубокий анализ, создается случайное дерево
     '''
@@ -34,5 +34,5 @@ def long_test(logger):
 
 
 if __name__ == '__main__':
-    test_run()
-    long_test(info_log)
+    test_run(info_log)
+    long_test_run(info_log)

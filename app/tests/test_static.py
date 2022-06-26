@@ -5,49 +5,6 @@ from base_functions import *
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 
 
-
-def clear_history():
-    for node in ShopUnitStatistic.query.all():
-        db.session.delete(node)
-    db.session.commit()
-    assert len(ShopUnitStatistic.query.all()) == 0
-
-
-def import_history(data_first="2022-02-01T12:00:00.000Z", days=10):
-    for i, price in enumerate(range(10)):
-        date = datetime.datetime.strptime(data_first, TIME_FORMAT) + datetime.timedelta(days=i)
-
-        tree_i = {
-            "items": [
-                {
-                    "type": "CATEGORY",
-                    "name": f"Смартфоны {i}",
-                    "id": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                    "parentId": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
-                },
-                {
-                    "type": "OFFER",
-                    "name": "jPhone 13",
-                    "id": "863e1a7a-1304-42ae-943b-179184c077e3",
-                    "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                    "price": price
-                },
-                {
-                    "type": "OFFER",
-                    "name": "Xomiа Readme 10",
-                    "id": "b1d8fd7d-2ae3-47d5-b2f9-0f094af800d4",
-                    "parentId": "d515e43f-f3f6-4471-bb77-6b455017a2d2",
-                    "price": 2 * price + 1
-                }
-            ],
-            "updateDate": str(date.strftime(TIME_FORMAT))[:-8] + 'Z'
-        }
-
-        status, x = request("/imports", method="POST", data=tree_i)
-        assert status == 200, f"Expected HTTP status code 200, got {status}"
-
-
-
 def test_stats(id, start_t=None, end_t=None):
     params_dict = dict()
     flags = [False, False]
@@ -58,19 +15,40 @@ def test_stats(id, start_t=None, end_t=None):
         params_dict['dateEnd'] = end_t
         flags[1] = True
     params = urllib.parse.urlencode(params_dict)
-    print(f"/node/{id}/statistic?{params}")
     status, response = request(
         f"/node/{id}/statistic?{params}", json_response=True)
 
     assert status == 200, f"Expected HTTP status code 200, got {status}"
-    for item in response:
-        date_item = str(item['date'])[:-1] + '0.000000+0000'
+    ids = set()
+
+    for item in response['items']:
+        date_item = str(item['date'])[:-6] + '0.000000+0000'
+        ids.add((item["id"], item["date"]))
         if flags[0]:
             assert date_format(params_dict['dateStart']) <= date_format(
                 date_item), f'time={date_format(date_item)} t=>{date_format(params_dict["dateStart"])}'
         if flags[1]:
             assert date_format(date_item) < date_format(
                 params_dict['dateEnd']), f'time={date_format(date_item)} t<{date_format(params_dict["dateEnd"])} )'
+
+    ids_real = set()
+    for node in ShopUnitStatistic.query.filter_by(id=id).all():
+        if flags[0] and not flags[1]:
+
+            if date_format(params_dict['dateStart']) <= date_format(node.date.isoformat() + '.000Z'):
+                ids_real.add((node.id, node.date.isoformat() + '.000Z'))
+        if flags[1] and not flags[0]:
+
+            if date_format(node.date.isoformat() + '.000Z') < date_format(params_dict['dateEnd']):
+                ids_real.add((node.id, node.date.isoformat() + '.000Z'))
+        elif all(flags):
+
+            if date_format(params_dict['dateStart']) <= date_format(node.date.isoformat() + '.000Z') < date_format(
+                    params_dict['dateEnd']):
+                ids_real.add((node.id, node.date.isoformat() + '.000Z'))
+        else:
+            ids_real.add((node.id, node.date.isoformat() + '.000Z'))
+    assert ids == ids_real
 
     return response
 
@@ -80,8 +58,9 @@ def date_format(date_str):
 
 
 def test_valid_date(logger, n=1):
+    '''Провереям '''
     logger.info('stat test_valid_date: start')
-    for x in range(n):
+    for round_i in range(n):
         tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
 
         import_tree(logger, tree)
@@ -92,10 +71,12 @@ def test_valid_date(logger, n=1):
             date_first = date_first + datetime.timedelta(days=random.randint(-5, 5))
             date_end = date_end + datetime.timedelta(days=random.randint(-5, 5))
 
-        start_day = date_first.strftime(TIME_FORMAT)
-        date_end = date_end.strftime(TIME_FORMAT)
+        start_day = date_first.strftime(TIME_FORMAT) if random.randint(1, 10) > 5 else None
+        date_end = date_end.strftime(TIME_FORMAT) if random.randint(1, 10) > 5 else None
 
-        for id_offer in range(last_id_offer+1, last_id_category, 1):
+        for id_offer in range(last_id_offer + 1, last_id_category, 1):
+            if id_offer == 0:
+                continue
             test_stats(id=str(id_offer) + '-10000', start_t=start_day, end_t=date_end)
     logger.info('stat test_valid_date: passed')
 

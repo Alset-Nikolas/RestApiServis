@@ -291,6 +291,3 @@ def imports():
     save_request_fact(ids, update_date)
     db.session.commit()
     return '', 200
-
-    #todo Не нужно рекурсивно обновлять даты (скорее всего), только родители и только дети
-    #todo sales Не нужно детей

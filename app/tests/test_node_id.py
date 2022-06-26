@@ -7,7 +7,7 @@ def check_response_node(id_leaf):
     if id_leaf is None:
         return
     status, response = request(f"/nodes/{id_leaf}", json_response=True)
-    assert status == 200, f"Expected HTTP status code 200, got {status}"
+    assert status == 200, f"Expected HTTP status code 200, got {status} id={id_leaf}"
     assert response['type'] in ['OFFER', 'CATEGORY']
     assert check_time(response['date']), f'{response["date"]}'
     if response['type'] == 'OFFER':
@@ -32,12 +32,10 @@ def check_response_node(id_leaf):
             children = box
             box = []
         if q_offer == 0:
-            if response['type'] == 'CATEGORY':
-                assert response['price'] is None, f'id_problem={node.id} price={response["price"]}'
-                assert len(response['children']) == len(node.children), f'Не совпадает кол-во детей должно={len(node.children)}, сечас={len(response["children"])} '
-            else:
-                assert response['children'] is None, f'id_problem={node.id} children={response["children"]}'
-                assert response['price'] == node.price, f'id_problem={node.id} price={response["price"]}'
+            assert response['price'] is None, f'id_problem={node.id} price={response["price"]}'
+            assert len(response['children']) == len(
+                node.children), f'Не совпадает кол-во детей должно={len(node.children)}, сечас={len(response["children"])} '
+
         else:
             assert response[
                        'price'] == sum_ // q_offer, f'Ждали сумму={sum_ // q_offer} Получили={response["price"]} id={id_leaf}'
@@ -56,11 +54,11 @@ def test_all(logger):
 
 def test_node_id_random_tree(logger):
     logger.info('test_node_id_random_tree run')
-    # tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
-    # import_tree(logger, tree)
-    # + [x.id for x in ShopUnit.query.filter_by(
-    #             children=[]).all()]
-    for id_ in [x.id for x in ShopUnit.query.filter_by(type='OFFER').all()]:
+    tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
+    import_tree(logger, tree)
+    ids = set(range(last_id_offer + 1, last_id_category, 1))
+    ids.remove(0)
+    for id_ in [f"{str(id)}-10000" for id in ids]:
         check_response_node(id_)
     logger.info('test_node_id_random_tree passed')
 

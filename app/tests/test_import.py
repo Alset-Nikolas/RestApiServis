@@ -3,6 +3,7 @@ from base_functions import *
 from components.schemas.ShopUnit import ShopUnit
 from my_logs.logg import info_log
 
+
 def test_no_valid_date(logger):
     '''Проверка на валидность updateDate. Ожидаем только iso формат'''
     update_node = {
@@ -123,6 +124,7 @@ def test_no_valid_child(logger):
     assert status == 400, f"Expected HTTP status code 400, got {status}"
     logger.info(f'test_no_valid_name: passed')
 
+
 def test_no_valid_child_1(logger):
     '''Родителем OFFER - только CATEGORY'''
     update_node = {
@@ -148,6 +150,7 @@ def test_no_valid_child_1(logger):
     status, x = request("/imports", method="POST", data=update_node)
     assert status == 400, f"Expected HTTP status code 400, got {status}"
     logger.info(f'test_no_valid_child_1: passed')
+
 
 def test_valid_child(logger):
     '''Родителем OFFER - только CATEGORY'''
@@ -175,6 +178,7 @@ def test_valid_child(logger):
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info(f'test_no_valid_name: passed')
 
+
 def test_valid_child_1(logger):
     '''Родителем OFFER - только CATEGORY'''
     update_node = {
@@ -193,6 +197,7 @@ def test_valid_child_1(logger):
     status, x = request("/imports", method="POST", data=update_node)
     assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info(f'test_valid_child_1: passed')
+
 
 def test_valid_name_str(logger):
     update_node = {
@@ -237,6 +242,7 @@ def test_no_valid_id(logger):
     assert status == 400, f"Expected HTTP status code 400, got {status}"
     logger.info(f'test_no_valid_id: passed')
 
+
 def get_date(id):
     status, response = request(f"/nodes/{id}", json_response=True)
     assert status == 200
@@ -246,9 +252,11 @@ def get_date(id):
         children = None
     return response['date'], response['parentId'], children
 
+
 def check_date(id_check, time_update):
     date, parent_id, children = get_date(id_check)
-    assert date == time_update[:-6]+'000Z', f"Expected datetime time_update={time_update[:-6]+'000Z'}, got node.date={date}, id={id_check}"
+    assert date == time_update[
+                   :-6] + '000Z', f"Expected datetime time_update={time_update[:-6] + '000Z'}, got node.date={date}, id={id_check}"
 
     while parent_id is not None:
         status, response = request(f"/nodes/{parent_id}", json_response=True)
@@ -256,7 +264,8 @@ def check_date(id_check, time_update):
         if status != 200:
             break
         date = response['date']
-        assert date == time_update[:-6]+'000Z', f"Expected datetime time_update={time_update[:-6]+'000Z'}, got parent.date={date}, id={parent_id}"
+        assert date == time_update[
+                       :-6] + '000Z', f"Expected datetime time_update={time_update[:-6] + '000Z'}, got parent.date={date}, id={parent_id}"
         parent_id = response['parentId']
 
 
@@ -380,13 +389,12 @@ def id_conversation(id):
 
 
 def get_all_descendants(node_id):
-
     # {x.id: x.price for x in ShopUnit.query.all()}
     node = ShopUnit.query.filter_by(id=node_id).first()
     parents = [node_id]
     ans = []
     box = []
-    while len(parents) >0:
+    while len(parents) > 0:
         for parent_id in parents:
             parent = ShopUnit.query.filter_by(id=parent_id).first()
             if parent.children:
@@ -396,6 +404,7 @@ def get_all_descendants(node_id):
         box = []
 
     return ans
+
 
 def test_check_swap_parents(children_id, parents_id):
     '''
@@ -407,7 +416,8 @@ def test_check_swap_parents(children_id, parents_id):
         old_parent_id = node.parentId  # запоминаем его родителя
         old_parent = ShopUnit.query.filter_by(id=old_parent_id).first()
         if node.type == 'CATEGORY':
-            parent_id_after_filter = list(set(parents_id) - set(get_all_descendants(node_id))) #Если мы смещаем категорию, то его детей нельзя рассматривать как нового родителя
+            parent_id_after_filter = list(set(parents_id) - set(get_all_descendants(
+                node_id)))  # Если мы смещаем категорию, то его детей нельзя рассматривать как нового родителя
         for new_parent_id in parent_id_after_filter:  # из каждой категории
             if new_parent_id == node_id:
                 continue
@@ -472,7 +482,6 @@ def test_check_swap_parents(children_id, parents_id):
                 assert status == 200, f"Expected HTTP status code 200, got {status}"  # возвращаем все как было (старому родителю)
 
 
-
 def test_import_random_tree(logger):
     '''
         Проверка случайного дерева
@@ -480,11 +489,12 @@ def test_import_random_tree(logger):
     tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
     clear_bd(logger)
     import_tree(logger, tree)
-    all_category_id = [id_conversation(id_category) for id_category in range(1, last_id_category)] # id всех категорий
-    all_offer_id= [id_conversation(id_offer) for id_offer in range(-1, last_id_offer, -1)] # id всех offers
-    test_check_swap_parents(all_offer_id+all_category_id, all_category_id) # дочерним узлом мб любой, а родителем только категория
+    all_category_id = [id_conversation(id_category) for id_category in range(1, last_id_category)]  # id всех категорий
+    all_offer_id = [id_conversation(id_offer) for id_offer in range(-1, last_id_offer, -1)]  # id всех offers
+    test_check_swap_parents(all_offer_id + all_category_id,
+                            all_category_id)  # дочерним узлом мб любой, а родителем только категория
 
-    for category_id in all_category_id+all_offer_id:
+    for category_id in all_category_id + all_offer_id:
         node = ShopUnit.query.filter_by(id=category_id).first()
         for offer_id in all_offer_id:
             update_node = {
@@ -501,7 +511,6 @@ def test_import_random_tree(logger):
             }
             status, x = request("/imports", method="POST", data=update_node)
             assert status == 400, f"Expected HTTP status code 200, got {status}"
-
 
 
 def test_all(logger):

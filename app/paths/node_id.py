@@ -7,8 +7,10 @@ from flask import Blueprint
 bp_node_id = Blueprint('node_id', __name__)
 
 
-def get_info(ans, id_node: str) -> tuple:
-    '''Вернуть ниформацию о узле и его детей'''
+def get_info(ans:dict, id_node: str) -> tuple:
+    '''
+        Возвращает ниформацию о узле и его детях
+    '''
     node = ShopUnit.query.filter_by(id=id_node).first()
     type = node.type
 
@@ -22,12 +24,13 @@ def get_info(ans, id_node: str) -> tuple:
     offers = 0
     childs = node.children
     if childs is None:
-        #т.е это offer
+        # т.е это offer
         ans['children'] = None
         ans['price'] = node.price
         return ans, node.price, 1
+
     if len(childs) == 0:
-        #пустая категория
+        # пустая категория
         ans['children'] = []
         ans['price'] = None
         return ans, 0, 0
@@ -40,6 +43,7 @@ def get_info(ans, id_node: str) -> tuple:
         offers += offers_i
 
     if offers == 0:
+        # пустая категория
         ans["price"] = None
     else:
         ans["price"] = sum_price // offers
@@ -51,6 +55,7 @@ def get_info(ans, id_node: str) -> tuple:
 def nodes(id_):
     '''
         Обработчик по выводу информации по id
+        Получить информацию об элементе по идентификатору.
     '''
     info_log.info(f'handler:GET:/nodes/<id_>')
     if ShopUnit.query.filter_by(id=id_).first() is not None:

@@ -195,7 +195,6 @@ def create_random_tree():
             for q_item in range(random.randint(5, 7)):
                 type = random.randint(1, 2)
 
-
                 id_ = f"{str(last_id_category)}-10000" if type == 1 else f"{str(last_id_offer)}-10000"
                 tree_i['items'].append({
                     "type": "CATEGORY" if type == 1 else 'OFFER',
@@ -210,7 +209,6 @@ def create_random_tree():
                         tree_i['items'][-1]['parentId'] = f"{random_parent}-10000"
                     else:
                         tree_i['items'][-1]['parentId'] = None
-
 
                 if type == 1:
                     last_id_category += 1
@@ -242,5 +240,3 @@ def check_time(date_string):
         return True
     except ValueError:
         return False
-
-

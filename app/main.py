@@ -28,5 +28,4 @@ sys.setrecursionlimit(999999)
 
 from my_logs.logg import info_log, warning_log
 if __name__ == '__main__':
-    info_log.info('start')
     app.run(debug=True, host='0.0.0.0')

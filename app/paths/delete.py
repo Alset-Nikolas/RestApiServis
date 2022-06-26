@@ -15,8 +15,6 @@ def delete_one_node(node_id: int) -> None:
     '''
         Удалить узел по id из таблицы ShopUnit
     '''
-
-
     node = ShopUnit.query.filter_by(id=node_id).first()
     info_log.info(f'/delete/<id_>  Удаляем id={node_id}. name="{node.name}"')
     date_create = node.date

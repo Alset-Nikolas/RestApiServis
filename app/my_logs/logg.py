@@ -32,10 +32,8 @@ LOGGING_CONFIG = {
 
 logging.config.dictConfig(LOGGING_CONFIG)
 info_log = logging.getLogger('my_logger')
-info_log.info('debug log')
 
 warning_log = logging.getLogger('my_logger_error')
-info_log.info('debug log')
 
 # warning_log = logging.getLogger('warning_log')
 # warning_log.setLevel(logging.ERROR)

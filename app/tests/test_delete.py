@@ -4,6 +4,7 @@ from components.schemas.ShopUnit import ShopUnit
 from sqlalchemy import func
 from my_logs.logg import info_log
 
+
 def check_children(delete_id, date):
     children_del_node = ShopUnit.query.filter_by(parentId=delete_id).all()
     for id_child in [x.id for x in children_del_node]:
@@ -13,7 +14,8 @@ def check_children(delete_id, date):
         nodes_stat = ShopUnit.query.filter_by(parentId=delete_id).all()
         assert nodes_stat == [], f'Записи в таблице ShopUnit еще есть: (x_id, pa_parent_id)={[(x.id, x.parentId) for x in nodes_stat]}'
     if delete_id is not None:
-        nodes_stat = ShopUnitStatistic.query.filter_by(parentId=delete_id).filter(func.DATE(ShopUnitStatistic.date) < date).all()
+        nodes_stat = ShopUnitStatistic.query.filter_by(parentId=delete_id).filter(
+            func.DATE(ShopUnitStatistic.date) <= date).all()
         assert nodes_stat == [], f'Записи в таблице ShopUnitStatistic еще есть: (x_id, pa_parent_id)={[(x.id, x.parentId) for x in nodes_stat]}'
 
 
@@ -25,6 +27,7 @@ def check_parent(id_node, parent_info_before_del):
     cop.pop(cop.index(id_node))
     assert sorted(parent.children) == sorted(
         cop), f'После удаления OFFER ожидалось {sorted(cop)}, получили {sorted(parent.children)} ,Параметры родителя: name={parent.name}, id={parent.id}'
+
 
 def remove_ids_children(children_ids, ids):
     if ids is None or children_ids is None:
@@ -39,6 +42,7 @@ def remove_ids_children(children_ids, ids):
         children_ids = box
         box = []
 
+
 def delete_node(delete_id, ids):
     del_node = ShopUnit.query.filter_by(id=delete_id).first()
     remove_ids_children(del_node.children, ids)
@@ -52,7 +56,7 @@ def delete_node(delete_id, ids):
             'id': parent.id,
             'price': parent.price,
             'children': list(parent.children),
-            'date':parent.date
+            'date': parent.date
         }
 
     status, _ = request(f"/delete/{delete_id}", method="DELETE")
@@ -106,19 +110,26 @@ def test_all(logger):
 
 
 def test_delete_random_tree(logger):
+    '''
+        Проверка на удаление элемента дерева
+        Идея: Создать дерево случайное и в случайном порядке удалить каждый узел
+        проверяя в бд отсутствие себя и детей + чтобы родитель потерял ссылку на этот узел.
+    '''
     logger.info('test_delete_random_tree run')
     tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
     import_tree(logger, tree)
-    ids = set(range(last_id_offer+1, last_id_category, 1))
+    ids = set(range(last_id_offer + 1, last_id_category, 1))
     ids.remove(0)
     while len(ids) != 0:
         param = ids.pop()
         node_id = f"{param}-10000"
         test_valid_delete(node_id, ids)
+    assert len(ShopUnit.query.all()) == 0
     logger.info('test_delete_random_tree passed')
 
 
 if __name__ == "__main__":
     logger = info_log
     test_all(logger)
-    test_delete_random_tree(logger)
+    for i in range(20):
+        test_delete_random_tree(logger)

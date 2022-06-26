@@ -5,12 +5,15 @@
 2. Клонируем репозиторий в папку new_app
    - git clone https://github.com/Alset-Nikolas/RestApiServis
 3. Затем нужно забилдить и поднять контейнер с помощью Docker Compose в этом помогут команды ниже
-   - sudo docker-compose -f docker-compose.dev.yml build # Билд
-   - sudo docker-compose -f docker-compose.dev.yml up # Запуск
-   - sudo docker-compose -f docker-compose.dev.yml up -d # Запуск в фоне
-   - sudo docker-compose -f docker-compose.dev.yml stop # Остановка
+   - sudo docker-compose -f docker-compose.yml build # Билд
+   - sudo docker-compose -f docker-compose.yml up # Запуск
+   - sudo docker-compose -f docker-compose.yml up -d # Запуск в фоне
+   - sudo docker-compose -f docker-compose.yml stop # Остановка
 4. Нужно создать таблицы бд
    - sudo docker exec flask_azz_yt flask  commands create_db
+
+5. Для автоматического перезапуска при рестарте контейнера
+   - sudo docker run --restart=always new_app_app
 
 # Пояснение к структуре проекта:
 

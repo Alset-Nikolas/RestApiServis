@@ -7,7 +7,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from base_functions import test_import, clear_bd
+from .base_functions import test_import, clear_bd
 from my_logs.logg import info_log
 
 API_BASEURL = "http://localhost:5000"

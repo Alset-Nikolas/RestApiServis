@@ -6,6 +6,10 @@ import urllib.parse
 import urllib.request
 from components.schemas.ShopUnit import ShopUnit
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
+from components.schemas.Error import Error
+from components.schemas.ShopUnitImport import ShopUnitImport
+from components.schemas.ShopUnitImportRequest import ShopUnitImportRequest
+from components.schemas.ShopUnitType import ShopUnitType
 from main import db
 
 API_BASEURL = "http://localhost:5000"
@@ -240,3 +244,11 @@ def check_time(date_string):
         return True
     except ValueError:
         return False
+
+def clear_bd_after_tests():
+    bds = [ShopUnit, ShopUnitStatistic, Error, ShopUnitImport, ShopUnitImportRequest]
+    for bd in bds:
+        for node in bd.query.all():
+            db.session.delete(node)
+    db.session.commit()
+    print('Ok')

@@ -1,5 +1,5 @@
 import datetime
-from base_functions import *
+from .base_functions import *
 from components.schemas.ShopUnit import ShopUnit
 from my_logs.logg import info_log
 
@@ -287,7 +287,7 @@ def test_valid_date(id_node, add_days):
         }
         status, x = request("/imports", method="POST", data=update_node)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
-        return new_data.strftime("%Y-%m-%dT%H:%M:%S.%f%z")[:-1]
+        return str(node.date.strftime('%Y-%m-%dT%H:%M:%S.%f%Z')[:-3] + 'Z')
 
     new_time = update_date()
     check_date(id_node, new_time)
@@ -421,7 +421,6 @@ def test_check_swap_parents(children_id, parents_id):
         for new_parent_id in parent_id_after_filter:  # из каждой категории
             if new_parent_id == node_id:
                 continue
-            print(node_id, old_parent_id, new_parent_id, parent_id_after_filter)
             new_parent = ShopUnit.query.filter_by(id=new_parent_id).first()  # формируем нового родителя
 
             if old_parent and new_parent:  # назначаем новое время для проверки
@@ -514,27 +513,25 @@ def test_import_random_tree(logger):
 
 
 def test_all(logger):
-    # clear_bd(logger)
-    # test_import(logger)
-    # all_node_ids = [x.id for x in ShopUnit.query.all()]
-    # for i, node in enumerate(all_node_ids):
-    #     test_valid_date(node, add_days=i + 1)
-    # logger.info(f'test_date: passed')
-    # for i, node in enumerate(all_node_ids):
-    #     test_price(node, add_price=i + 1)
-    # logger.info(f'test_price: passed')
-    # test_valid_child_1(logger)
-    # test_no_valid_date(logger)
-    # test_no_valid_type(logger)
-    # test_no_valid_child_1(logger)
-    # test_no_valid_price(logger)
-    # test_no_valid_name(logger)
-    # test_no_valid_id(logger)
-    # test_no_valid_name_int(logger)
-    # test_valid_name_str(logger)
-    # test_no_valid_child(logger)
-    # test_valid_child(logger)
-    # test_valid_update_parent(logger)
+    clear_bd(logger)
+    test_import(logger)
+    all_node_ids = [x.id for x in ShopUnit.query.all()]
+    logger.info(f'test_date: passed')
+    for i, node in enumerate(all_node_ids):
+        test_price(node, add_price=i + 1)
+    logger.info(f'test_price: passed')
+    test_valid_child_1(logger)
+    test_no_valid_date(logger)
+    test_no_valid_type(logger)
+    test_no_valid_child_1(logger)
+    test_no_valid_price(logger)
+    test_no_valid_name(logger)
+    test_no_valid_id(logger)
+    test_no_valid_name_int(logger)
+    test_valid_name_str(logger)
+    test_no_valid_child(logger)
+    test_valid_child(logger)
+    test_valid_update_parent(logger)
 
     n = 1
     logger.info(f'test random_tree n={n}')

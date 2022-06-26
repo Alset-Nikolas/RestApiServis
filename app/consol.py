@@ -4,13 +4,18 @@ from components.schemas.ShopUnitType import ShopUnitType
 from my_logs.logg import info_log
 
 bp_consoly = Blueprint('commands', __name__)
-FLAG_CREATE_TABLE = False
+
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
+
+
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + " CASCADE"
+
 
 @bp_consoly.cli.command('create_db')
 def create_db():
-    print('Create Table')
-    global FLAG_CREATE_TABLE
-    FLAG_CREATE_TABLE = True
     db.drop_all()
     db.create_all()
 
@@ -30,17 +35,11 @@ def create_db():
 
 @bp_consoly.cli.command('run_test')
 def go_test():
-    if not FLAG_CREATE_TABLE:
-        print('create tb: create_tb')
-    print('RUN TEST')
     from tests import test_run
     test_run(info_log)
 
 
 @bp_consoly.cli.command('run_long_test')
 def go_test():
-    if not FLAG_CREATE_TABLE:
-        print('create tb: create_tb')
-    print('RUN long TEST')
     from tests import long_test_run
     long_test_run(info_log)

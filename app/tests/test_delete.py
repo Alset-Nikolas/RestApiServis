@@ -1,4 +1,4 @@
-from base_functions import *
+from .base_functions import *
 from components import ShopUnitStatistic
 from components.schemas.ShopUnit import ShopUnit
 from sqlalchemy import func

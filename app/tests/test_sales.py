@@ -1,4 +1,4 @@
-from base_functions import *
+from .base_functions import *
 from components.schemas.ShopUnit import ShopUnit
 from my_logs.logg import info_log
 

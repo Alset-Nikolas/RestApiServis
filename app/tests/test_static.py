@@ -1,7 +1,7 @@
 import datetime
 import random
 from my_logs.logg import info_log
-from base_functions import *
+from .base_functions import *
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 
 

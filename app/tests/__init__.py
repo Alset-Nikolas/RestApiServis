@@ -1,18 +1,13 @@
-from base_functions import *
-import test_delete
-import test_import
-import test_node_id
-from unit_test import main
-import test_static
+from . import test_delete, test_node_id, test_static, test_import
+from .unit_test import main
 from my_logs.logg import info_log
-from test_sales import test_valid_date
-
+from .test_sales import test_valid_date
+from .base_functions import clear_bd, clear_bd_after_tests
 
 def test_run(logger):
     '''
         Основные тесты
     '''
-    logger = info_log
     clear_bd(logger)
     test_delete.test_all(logger)
     test_import.test_all(logger)
@@ -20,6 +15,7 @@ def test_run(logger):
     main(logger)
     test_static.test_valid_date(logger)
     clear_bd(logger)
+    clear_bd_after_tests()
 
 
 def long_test_run(logger):
@@ -36,3 +32,4 @@ def long_test_run(logger):
 if __name__ == '__main__':
     test_run(info_log)
     long_test_run(info_log)
+    clear_bd_after_tests()

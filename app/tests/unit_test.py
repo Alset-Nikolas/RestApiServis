@@ -7,7 +7,8 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from base_functions import create_logging, test_import, clear_bd
+from base_functions import test_import, clear_bd
+from my_logs.logg import info_log
 
 API_BASEURL = "http://localhost:5000"
 
@@ -290,6 +291,6 @@ def main(logger):
 
 
 if __name__ == "__main__":
-    logger = create_logging()
+    logger = info_log
     main(logger)
     # clear_bd(logger)

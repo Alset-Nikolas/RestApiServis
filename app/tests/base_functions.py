@@ -4,11 +4,9 @@ import random
 import urllib.error
 import urllib.parse
 import urllib.request
-import logging
 from components.schemas.ShopUnit import ShopUnit
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 from main import db
-from datetime import date
 
 API_BASEURL = "http://localhost:5000"
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
@@ -115,20 +113,8 @@ def request(path, method="GET", data=None, json_response=False):
         return (e.getcode(), None)
 
 
-def create_logging():
-    '''Создание логирования для теста'''
-    logger = logging.getLogger('test_log')
-    logger.setLevel(logging.INFO)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    return logger
-
-
 def clear_bd(logger):
-    '''Очистка таблицы NodeTree'''
+    '''Очистка таблицы ShopUnit и ShopUnitStatistic'''
     for node in ShopUnit.query.all():
         db.session.delete(node)
     db.session.commit()
@@ -148,7 +134,6 @@ def test_import(logger):
         status, x = request("/imports", method="POST", data=batch)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info(f'test import passed.')
-    # check_bd(logger)
 
 
 def add_new_category(logger):
@@ -179,34 +164,53 @@ def add_new_category(logger):
 
 
 def create_random_tree():
+    '''
+        Генерация случайного дерева:
+
+        "id":
+            last_id_category -  кол-во категорий уже зафиксированных
+                id category генерируется по след правилу = last_id_category-10000 , где last_id_category >= 1
+            abs(last_id_offer) - кол-во OFFER-ов
+                last_id_offer генерируется по след правилу = last_id_offer-10000 , где last_id_offer <= -1
+
+        "name": Правило -> {last_id_category}_{last_id_offer} -> у каждого свое имя
+        "parentId" выбирается или из категорий или None
+
+        Остальные поля случайно :)
+
+    '''
     tree = []
-    last_id_category = 1
-    last_id_offer = -1
     date = "2022-02-01T12:00:00.000Z"
     date_first = datetime.datetime.strptime(date, TIME_FORMAT)
     date_i = date_first
 
     max_last_id_category = 0
     min_last_id_offer = 0
-    for days_number in range(10):
+    for days_number in range(5):
         last_id_category = 1
         last_id_offer = -1
-        for q_items in range(random.randint(5, 15)):
+        for q_items in range(random.randint(5, 7)):
             tree_i = dict()
             tree_i['items'] = []
-            for q_item in range(random.randint(5, 15)):
+            for q_item in range(random.randint(5, 7)):
                 type = random.randint(1, 2)
-                if random.randint(1, 10) == 1 or last_id_category == 1:
-                    random_parent = None
-                else:
-                    random_parent = random.randint(1, last_id_category - 1)
-                    random_parent = f"{random_parent}-10000"
+
+
+                id_ = f"{str(last_id_category)}-10000" if type == 1 else f"{str(last_id_offer)}-10000"
                 tree_i['items'].append({
                     "type": "CATEGORY" if type == 1 else 'OFFER',
                     "name": f"{last_id_category}_{last_id_offer}",
-                    "id": f"{str(last_id_category)}-10000" if type == 1 else f"{str(last_id_offer)}-10000",
+                    "id": id_,
                 })
-                tree_i['items'][-1]['parentId'] =  random_parent
+                if random.randint(1, 10) == 1 or last_id_category == 1:
+                    tree_i['items'][-1]['parentId'] = None
+                else:
+                    random_parent = random.randint(1, last_id_category - 1)
+                    if random_parent is not None and f"{random_parent}-10000" != id_:
+                        tree_i['items'][-1]['parentId'] = f"{random_parent}-10000"
+                    else:
+                        tree_i['items'][-1]['parentId'] = None
+
 
                 if type == 1:
                     last_id_category += 1
@@ -215,22 +219,28 @@ def create_random_tree():
                     tree_i['items'][-1]['price'] = random.randint(1000, 5000)
             tree.append(tree_i)
             date_i = datetime.datetime.strptime(date, TIME_FORMAT) + datetime.timedelta(days=days_number)
-            tree_i['updateDate'] = date_i.strftime(TIME_FORMAT)
+            tree_i['updateDate'] = date_i.isoformat()[:-6] + '.000Z'
         max_last_id_category = max(max_last_id_category, last_id_category)
         min_last_id_offer = min(min_last_id_offer, last_id_offer)
     date_end = date_i
     return tree, max_last_id_category, min_last_id_offer, date_first, date_end
 
+
 def import_tree(logger, tree):
+    '''Импортирование дереа'''
     clear_bd(logger)
     for tree_i in tree:
         status, x = request("/imports", method="POST", data=tree_i)
         assert status == 200, f"Expected HTTP status code 200, got {status}"
     logger.info('import random tree')
 
+
 def check_time(date_string):
+    '''Проверка валидации времени'''
     try:
         datetime.datetime.strptime(date_string, TIME_FORMAT)
         return True
     except ValueError:
         return False
+
+

@@ -26,7 +26,7 @@ def calc_price(ans, id, t):
     ans['name'] = node.name
     ans['id'] = id
     ans['parentId'] = node.parentId
-    ans['children'] = []
+    # ans['children'] = []
 
     children = ShopUnitStatistic.query.filter(func.DATE(ShopUnitStatistic.date) < t)
     children = children.filter_by(parentId=id)
@@ -38,7 +38,7 @@ def calc_price(ans, id, t):
         ch_last = children.order_by(desc(ShopUnitStatistic.date)).first()
         if ch_last is not None:
             ans_ch, summa_i, offers_i = calc_price(ans={}, id=ch_last.id, t=ch_last.date)
-            ans['children'].append(ans_ch)
+            # ans['children'].append(ans_ch)
             summa_ += summa_i
             offers += offers_i
     if node.type == 'OFFER':
@@ -104,4 +104,5 @@ def statistic(id_):
         ans_i, summa_, offers = calc_price({}, id_, t)
         res.append(ans_i)
     # save_static_response(save_info_to_static_response)
-    return jsonify(res), 200
+    ans = {'items':res}
+    return jsonify(ans), 200

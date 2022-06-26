@@ -27,7 +27,7 @@
      |      |       | -- ShopUnitType.py -> схема ShopUnitType
      |      | -- __init__ 
      |-- my_logs  (Логирование)
-     |      | -- logg.py -> Кофигурация логера
+     |      | -- logg.py -> Кофигурация логера 'level': 'ERROR' (для полной информации -> INFO)
      |      | -- __init__.py
      |-- paths  (URL)
      |      | -- base_function.py -> Общие функции в рамках paths

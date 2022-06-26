@@ -1,6 +1,6 @@
 from base_functions import *
 from components.schemas.ShopUnit import ShopUnit
-
+from my_logs.logg import info_log
 
 
 def check_response_node(id_leaf):
@@ -66,6 +66,6 @@ def test_node_id_random_tree(logger):
 
 
 if __name__ == "__main__":
-    logger = create_logging()
+    logger = info_log
     # test_all(logger)
     test_node_id_random_tree(logger)

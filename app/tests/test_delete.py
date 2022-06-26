@@ -2,6 +2,7 @@ from base_functions import *
 from components import ShopUnitStatistic
 from components.schemas.ShopUnit import ShopUnit
 from sqlalchemy import func
+from my_logs.logg import info_log
 
 def check_children(delete_id, date):
     children_del_node = ShopUnit.query.filter_by(parentId=delete_id).all()
@@ -118,6 +119,6 @@ def test_delete_random_tree(logger):
 
 
 if __name__ == "__main__":
-    logger = create_logging()
+    logger = info_log
     test_all(logger)
     test_delete_random_tree(logger)

@@ -22,6 +22,7 @@ def response_error_404():
 
 
 def delete_child(id_child: str, id_parent: object) -> None:
+    '''У родителя id_parent удаляем ссылку id_child'''
     parent = ShopUnit.query.filter_by(id=id_parent).first()
     if parent:
         if parent.children is not None:

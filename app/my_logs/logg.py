@@ -1,40 +1,43 @@
-
-import logging
 import logging.config
-
-log_config = {
+LOGGING_CONFIG = {
     'version': 1,
+    'disable_existing_loggers': False,
+
     'formatters': {
-        'my_formatter': {
-            'format': '%(asctime)s - %(levelname)s - %(message)s',
+        'default_formatter': {
+            'format': '[%(levelname)s:%(asctime)s] %(message)s'
         },
     },
-    'paths': {
-        'file_handler_info': {
-            'class': 'logging.FileHandler',
-            'formatter': 'my_formatter',
-            'filename': 'info_log.log',
-        },
-        'file_handler_error': {
-            'class': 'logging.FileHandler',
-            'formatter': 'my_formatter',
-            'filename': 'error_log.log',
+
+    'handlers': {
+        'stream_handler': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default_formatter',
         },
     },
+
     'loggers': {
-        'info_log': {
-            'paths': ['file_handler_info'],
+        'my_logger': {
+            'handlers': ['stream_handler'],
             'level': 'INFO',
+            'propagate': True
         },
-        'warning_log': {
-            'paths': ['file_handler_error'],
-            'level': 'WARNING',
-        },
-    },
+        'my_logger_error': {
+            'handlers': ['stream_handler'],
+            'level': 'INFO',
+            'propagate': True
+        }
+    }
 }
 
+logging.config.dictConfig(LOGGING_CONFIG)
+info_log = logging.getLogger('my_logger')
+info_log.info('debug log')
 
-logging.config.dictConfig(log_config)
+warning_log = logging.getLogger('my_logger_error')
+info_log.info('debug log')
 
-info_log = logging.getLogger('info_log')
-warning_log = logging.getLogger('warning_log')
+# warning_log = logging.getLogger('warning_log')
+# warning_log.setLevel(logging.ERROR)
+#
+# logging.warning('dd')

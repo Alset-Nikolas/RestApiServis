@@ -1,6 +1,6 @@
 import datetime
 import random
-
+from my_logs.logg import info_log
 from base_functions import *
 from components.schemas.ShopUnitStatistic import ShopUnitStatistic
 
@@ -50,7 +50,7 @@ def import_history(data_first="2022-02-01T12:00:00.000Z", days=10):
 
 def test_stats(id, start_t=None, end_t=None):
     params_dict = dict()
-    flags = [0, 0]
+    flags = [False, False]
     if start_t:
         params_dict['dateStart'] = start_t
         flags[0] = True
@@ -58,6 +58,7 @@ def test_stats(id, start_t=None, end_t=None):
         params_dict['dateEnd'] = end_t
         flags[1] = True
     params = urllib.parse.urlencode(params_dict)
+    print(f"/node/{id}/statistic?{params}")
     status, response = request(
         f"/node/{id}/statistic?{params}", json_response=True)
 
@@ -81,10 +82,9 @@ def date_format(date_str):
 def test_valid_date(logger, n=1):
     logger.info('stat test_valid_date: start')
     for x in range(n):
-        clear_history()
         tree, last_id_category, last_id_offer, date_first, date_end = create_random_tree()
 
-        import_tree(tree)
+        import_tree(logger, tree)
 
         date_first = date_first + datetime.timedelta(days=random.randint(-5, 5))
         date_end = date_end + datetime.timedelta(days=random.randint(-5, 5))
@@ -95,11 +95,11 @@ def test_valid_date(logger, n=1):
         start_day = date_first.strftime(TIME_FORMAT)
         date_end = date_end.strftime(TIME_FORMAT)
 
-        for id_offer in range(-1, last_id_offer, -1):
+        for id_offer in range(last_id_offer+1, last_id_category, 1):
             test_stats(id=str(id_offer) + '-10000', start_t=start_day, end_t=date_end)
     logger.info('stat test_valid_date: passed')
 
 
 if __name__ == '__main__':
-    logger = create_logging()
+    logger = info_log
     test_valid_date(logger)

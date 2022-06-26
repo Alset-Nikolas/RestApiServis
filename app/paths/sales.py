@@ -25,7 +25,11 @@ def filter_date(time):
     nodes = nodes.filter_by(type='OFFER')
 
     info_log.info(f'/sales time={time} после фильтра {[(x.name, x.date) for x in nodes]}')
-    return [get_info({}, node.id) for node in nodes]
+    ans = []
+    for node in nodes:
+        ans_i, _, _ = get_info({}, node.id)
+        ans.append(ans_i)
+    return ans
 
 
 @bp_sales.route('/sales', methods=['GET'])
